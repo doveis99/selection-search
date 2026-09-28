@@ -17,6 +17,8 @@
 <script src="hotkeys.js"></script>
 <script src="../popup/popup_modifier.js"></script>
 <script src="../popup/circular_popup.js"></script>
+<script src="../common/encoding.js"></script>
+<script src="../common/actionutils.js"></script>
 <script src="options.js"></script>
 
 </head>
@@ -216,6 +218,8 @@
 			</div>
 			<div class="setting-control"><input id="opt-open-new-tab-last" class="switch" type="checkbox" name="open_new_tab_last" /></div>
 		</div>
+
+		<div class="callout tip" data-i18n-html="pwa_tip"></div>
 	</div>
 
 	<div class="card">
@@ -771,8 +775,124 @@
 <div id="hotkey_info" data-i18n="hotkey_info"></div>
 
 
+<dialog id="url-editor">
+	<div class="modal-header">
+		<h3 class="modal-title" data-i18n="url_editor_title"></h3>
+		<span class="modal-subtitle" id="url-editor-engine"></span>
+	</div>
+
+	<textarea id="url-editor-text" class="code-input" rows="7" spellcheck="false"></textarea>
+
+	<div class="url-editor-insert">
+		<span class="muted" data-i18n="url_editor_insert"></span>
+		<button type="button" class="chip" data-insert="%s">%s</button>
+		<button type="button" class="chip" data-insert="{%+s}">{%+s}</button>
+		<button type="button" class="chip" data-insert="%PAGE_URL">%PAGE_URL</button>
+		<button type="button" class="chip" data-insert="%PAGE_HOST">%PAGE_HOST</button>
+	</div>
+	<p class="setting-desc" data-i18n="url_editor_newline_help"></p>
+
+	<div class="url-editor-preview">
+		<label class="setting-label" for="url-editor-sample" data-i18n="url_editor_preview"></label>
+		<input type="text" id="url-editor-sample" class="text-input" />
+		<a id="url-editor-result" target="_blank" rel="noopener noreferrer"></a>
+		<p class="setting-desc" data-i18n="url_editor_preview_note"></p>
+	</div>
+
+	<div class="modal-buttons">
+		<button type="button" class="btn" id="url-editor-cancel" data-i18n="editor_cancel"></button>
+		<button type="button" class="btn btn-primary" id="url-editor-apply" data-i18n="url_editor_apply" data-i18n-title="url_editor_apply_shortcut"></button>
+	</div>
+</dialog>
+
+
 
 <textarea class="theme_def" name="Default" id="theme_1"></textarea>
+
+<textarea class="theme_def" name="Default with automatic dark mode" id="theme_10">
+/* Follows the dark mode setting of the system / browser */
+@media (prefers-color-scheme: dark){
+ .popup, .button{
+  --ss-bg: #2b2d31;
+  --ss-text: #e8eaed;
+  --ss-border: rgba(255, 255, 255, 0.14);
+  --ss-hover: rgba(138, 180, 248, 0.18);
+  --ss-input-bg: rgba(255, 255, 255, 0.06);
+  --ss-accent: #8ab4f8;
+  --ss-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+ }
+}
+</textarea>
+
+<textarea class="theme_def" name="Classic" id="theme_9">
+/* The original popup design of Selection Search */
+.popup{
+ width: 12em;
+ background: #EDECEC;
+ border: solid 1px #AEAAA7;
+ border-radius: 0;
+ padding: 0.3em;
+ font-size: 9pt;
+ font-family: sans-serif;
+ box-shadow: 0px 1px 10px #ccc;
+}
+.popup li{
+ margin: 1px 0;
+ color: #202020;
+ font-size: 10pt;
+ font-family: sans-serif;
+}
+.popup input{
+ box-sizing: content-box;
+ width: 10.1em;
+ padding: 0;
+ border: 0;
+ border-radius: 0;
+ background: transparent;
+ color: #202020;
+ font-size: 10pt;
+ font-family: sans-serif;
+ line-height: normal;
+}
+.popup img{
+ margin: 0 4px 0 0;
+}
+.popup.mainmenu > li:first-child{
+ border-bottom: solid 1px #AEAAA7;
+ margin-bottom: 0.5em;
+ padding: 0.2em 0.3em;
+}
+.popup a{
+ display: block;
+ margin: 1px;
+ padding: 0.2em 0.3em;
+ border-radius: 3px;
+ color: #202020;
+ font-size: 10pt;
+ font-family: sans-serif;
+ line-height: normal;
+}
+.popup a:hover, .popup a.active{
+ background: #96B8E1;
+}
+.popup .engine-name{
+ width: 8.5em;
+ max-width: none;
+}
+.popup .engine-separator{
+ margin: 3px 0;
+ background: #AEAAA7;
+}
+.button, .button:hover{
+ width: 16px;
+ height: 16px;
+ background-color: #fafafa;
+ background-size: auto;
+ border: 1px solid #aaaaaa;
+ border-radius: 3px;
+ box-shadow: none;
+}
+</textarea>
 
 <textarea class="theme_def" name="Icons only" id="theme_2">
 .popup .engine-name, .popup.mainmenu > li:first-child{

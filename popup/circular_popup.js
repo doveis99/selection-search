@@ -90,7 +90,7 @@ function CircularPopup(popup, style, options){
         for(var i=0; i < count; i++){
 
             if(engines[i].is_submenu){
-                _generateCircularMenu(engines[i].engines, nodes[firstNode+i].querySelector(":scope > ul"), 0);
+                _generateCircularMenu(engines[i].engines, nodes[firstNode+i].querySelector(":scope > .submenu"), 0);
             }
 
             if(engines[i].is_separator){

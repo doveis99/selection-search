@@ -513,6 +513,19 @@ input.switch:focus-visible{
 	border: 1px solid #f1d98a;
 	color: #5f4a00;
 }
+.callout.tip{
+	background: var(--accent-soft);
+	border: 1px solid #c9dbf7;
+	color: #1d3f73;
+	line-height: 1.7;
+}
+.callout p{
+	margin: 0 0 4px;
+}
+.callout ul{
+	margin: 4px 0 0;
+	padding-left: 20px;
+}
 
 #more-variables{
 	display: none;
@@ -598,8 +611,8 @@ input.switch:focus-visible{
 	background: var(--hover);
 }
 
-/* Only the name/url/icon inputs are direct children of the cells */
-#engines td > input[type="text"]{
+/* The name/icon inputs are direct children of the cells, the url input is inside .url-field */
+#engines td > input[type="text"], #engines .url-field > input[type="text"]{
 	width: 100%;
 	box-sizing: border-box;
 	height: 28px;
@@ -611,7 +624,7 @@ input.switch:focus-visible{
 	font: inherit;
 	font-size: 13px;
 }
-#engines td > input[type="text"]:focus{
+#engines td > input[type="text"]:focus, #engines .url-field > input[type="text"]:focus{
 	outline: none;
 	border-color: var(--accent);
 	box-shadow: 0 0 0 3px var(--accent-ring);
@@ -620,10 +633,34 @@ input.switch:focus-visible{
 	color: var(--text-muted);
 }
 
+.url-field{
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+#engines .url-field > input.url{
+	flex: 1;
+	min-width: 0;
+}
+.url-expand{
+	flex: none;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--border-strong);
+	border-radius: 6px;
+	background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%235d6876' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9'/%3E%3C/svg%3E") no-repeat center center;
+	cursor: pointer;
+}
+.url-expand:hover{
+	background-color: var(--hover);
+	border-color: var(--accent);
+}
+
 .menu-folder td > input.name{
 	font-weight: 600;
 }
-.menu-folder td > input.url{
+.menu-folder input.url{
 	background: var(--subtle);
 }
 
@@ -819,6 +856,94 @@ a.delete{
 	border-radius: 8px;
 	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
 	font-size: 12.5px;
+}
+
+
+/* ---------------------------------------------------------------- Url editor */
+
+#url-editor{
+	box-sizing: border-box;
+	width: min(760px, calc(100vw - 32px));
+	max-height: calc(100vh - 32px);
+	padding: 20px 24px;
+	border: none;
+	border-radius: var(--radius);
+	background: var(--surface);
+	color: var(--text);
+	box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+#url-editor::backdrop{
+	background: rgba(15, 23, 42, 0.4);
+}
+.modal-header{
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	margin-bottom: 4px;
+}
+.modal-title{
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+}
+.modal-subtitle{
+	color: var(--text-muted);
+}
+#url-editor-text{
+	font-family: var(--font);
+	font-size: 14px;
+	line-height: 1.6;
+	word-break: normal;
+	overflow-wrap: anywhere;
+}
+.url-editor-insert{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+	font-size: 13px;
+}
+.chip{
+	padding: 2px 10px;
+	border: 1px solid var(--border-strong);
+	border-radius: 999px;
+	background: var(--subtle);
+	color: var(--text);
+	font-family: var(--font-mono);
+	font-size: 12px;
+	cursor: pointer;
+}
+.chip:hover{
+	border-color: var(--accent);
+	background: var(--accent-soft);
+}
+.url-editor-preview{
+	margin-top: 14px;
+	padding: 12px 14px;
+	background: var(--subtle);
+	border-radius: 10px;
+}
+.url-editor-preview .text-input{
+	width: 100%;
+	max-width: 320px;
+	margin: 6px 0 8px;
+}
+#url-editor-result{
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	line-height: 1.5;
+	word-break: break-all;
+}
+#url-editor-result:not([href]){
+	color: var(--text-muted);
+}
+.modal-buttons{
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
 }
 
 

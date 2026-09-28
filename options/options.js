@@ -676,10 +676,14 @@ function initOptionsPage(){
 		location.reload();
 	})
 
-	// Ctrl+S / Cmd+S saves the settings
+	var urlEditor = initUrlEditor();
+
+	// Ctrl+S / Cmd+S saves the settings, including a url being edited in the url editor
 	$(document).on('keydown', function(e){
 		if((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's'){
 			e.preventDefault();
+			if(urlEditor.isOpen())
+				urlEditor.apply();
 			$('#save').click();
 		}
 	});
@@ -1075,6 +1079,84 @@ function initOptionsPage(){
 
 	}, 500);
 
+}
+
+
+// Dialog for editing long search urls, e.g. urls containing AI prompts.
+// Newlines in the editor are stored as %0A in the url.
+function initUrlEditor(){
+
+	var dialog = document.getElementById('url-editor');
+	var text = $('#url-editor-text');
+	var sample = $('#url-editor-sample');
+	var utils = new BaseActionUtils();
+	var target = null;
+
+	function editorValue(){
+		return text.val().trim().replace(/\r?\n/g, '%0A');
+	}
+
+	function updatePreview(){
+		var url = utils.replaceSelection(editorValue(), sample.val());
+		var result = $('#url-editor-result').text(url);
+
+		// Only allow opening real web urls from the options page
+		if(/^https?:\/\//i.test(url))
+			result.attr('href', url);
+		else
+			result.removeAttr('href');
+	}
+
+	function apply(){
+		if(target === null)
+			return;
+		target.val(editorValue()).trigger('input').trigger('change');
+		dialog.close();
+	}
+
+	$(document).on('click', '.url-expand', function(){
+		target = $(this).closest('td').find('input.url');
+
+		$('#url-editor-engine').text($(this).closest('tr').find('input.name').val());
+		text.val(target.val().replace(/%0A/g, '\n'));
+		if(!sample.val())
+			sample.val(i18n('url_editor_sample_default'));
+
+		updatePreview();
+		dialog.showModal();
+		text.focus();
+		return false;
+	});
+
+	text.on('input', updatePreview);
+	sample.on('input', updatePreview);
+
+	$('#url-editor .chip').click(function(){
+		var el = text[0];
+		el.setRangeText($(this).attr('data-insert'), el.selectionStart, el.selectionEnd, 'end');
+		el.focus();
+		updatePreview();
+	});
+
+	text.on('keydown', function(e){
+		if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+			e.preventDefault();
+			apply();
+		}
+	});
+
+	$('#url-editor-apply').click(apply);
+	$('#url-editor-cancel').click(function(){
+		dialog.close();
+	});
+	dialog.addEventListener('close', function(){
+		target = null;
+	});
+
+	return {
+		isOpen: function(){ return dialog.open; },
+		apply: apply,
+	};
 }
 
 

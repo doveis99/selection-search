@@ -110,84 +110,129 @@ const defaultStyleCSS = `
 }
 
 
+/*
+ * The colors are defined as variables so that custom styles can change the
+ * colors without overriding every rule, e.g. for dark mode. The border, hover
+ * and input colors are translucent so they also work with custom backgrounds.
+ */
+.popup, .button{
+ --ss-bg: #ffffff;
+ --ss-text: #1f2328;
+ --ss-border: rgba(127, 127, 127, 0.28);
+ --ss-hover: rgba(26, 102, 210, 0.12);
+ --ss-input-bg: rgba(127, 127, 127, 0.1);
+ --ss-accent: #1a66d2;
+ --ss-shadow: 0 8px 24px rgba(15, 23, 42, 0.16), 0 1px 3px rgba(15, 23, 42, 0.08);
+ --ss-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+}
 .popup{
- width: 12em;
+ width: 13em;
  position: absolute;
- background: #EDECEC;
- border: solid 1px #AEAAA7;
- padding: 0.3em 0.3em;
- font-size: 9pt;
+ background: var(--ss-bg);
+ border: 1px solid var(--ss-border);
+ border-radius: 10px;
+ padding: 4px;
+ font-size: 13px;
  margin: 0;
  list-style-type: none;
- -webkit-box-shadow: 0px 1px 10px #ccc;
+ box-shadow: var(--ss-shadow);
  display: block;
- font-family: sans-serif;
-z-index: 2147483647;
+ font-family: var(--ss-font);
+ z-index: 2147483647;
 }
 .popup li{
- margin: 1px 0;
+ margin: 0;
  padding: 0;
  text-align: left;
- color: #202020;
+ color: var(--ss-text);
  display: block;
- font-family: sans-serif;
+ font-family: var(--ss-font);
+ font-size: 13px;
 }
 .popup input{
-	width: 10.1em;
+ box-sizing: border-box;
+ width: 100%;
+ padding: 5px 8px;
+ border: 1px solid transparent;
+ border-radius: 6px;
+ background: var(--ss-input-bg);
+ color: var(--ss-text);
+ font-family: var(--ss-font);
+ font-size: 12px;
+ line-height: 1.4;
+}
+.popup input:focus{
+ border-color: var(--ss-accent);
 }
 .popup img{
+ flex: none;
  width: 16px;
  height: 16px;
  vertical-align: middle;
- border:none;
- margin: 0;
- margin-right: 4px;
+ border: none;
+ margin: 0 8px 0 0;
  display: inline;
 }
 .popup.mainmenu > li:first-child {
  overflow: hidden;
- text-overflow:ellipsis;
- white-space:nowrap;
- border-bottom: solid 1px #AEAAA7;
- margin-bottom: 0.5em;
- padding: 0.2em 0.3em;
+ text-overflow: ellipsis;
+ white-space: nowrap;
+ padding: 2px 2px 6px;
+ margin-bottom: 4px;
+ border-bottom: 1px solid var(--ss-border);
 }
 .popup a{
- margin: 1px;
+ display: flex;
+ align-items: center;
+ margin: 1px 0;
+ padding: 5px 8px;
+ border-radius: 6px;
  text-decoration: none;
- color: #202020;
- display: block;
- padding: 0.2em 0.3em;
- -webkit-border-radius: 3px;
- font-family: sans-serif;
+ color: var(--ss-text);
+ font-family: var(--ss-font);
+ font-size: 13px;
+ line-height: 1.4;
+ cursor: pointer;
 }
 .popup a:hover, .popup a.active{
- background: #96B8E1;
+ background: var(--ss-hover);
 }
 .popup .engine-name{
  display: inline-block;
- width: 8.5em;
+ flex: 1 1 auto;
+ min-width: 0;
+ max-width: calc(100% - 24px);
  overflow: hidden;
- text-overflow:ellipsis;
- white-space:nowrap;
+ text-overflow: ellipsis;
+ white-space: nowrap;
  vertical-align: middle;
+ color: inherit;
+ font-family: inherit;
+ font-size: inherit;
+ line-height: inherit;
 }
 .button {
- position:absolute;
- background: #fafafa;
+ position: absolute;
+ width: 20px;
+ height: 20px;
+ background-color: var(--ss-bg);
  background-repeat: no-repeat;
  background-position: center center;
- -webkit-border-radius: 3px;
- border: 1px solid #aaaaaa;
- width: 16px;
- height: 16px;
- font-family: sans-serif;
+ background-size: 16px 16px;
+ border: 1px solid var(--ss-border);
+ border-radius: 6px;
+ box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+ font-family: var(--ss-font);
+ cursor: pointer;
  z-index: 2147483647;
+}
+.button:hover{
+ border-color: var(--ss-accent);
 }
 .popup .engine-separator{
  height: 1px;
- margin: 3px 0;
- background: #AEAAA7;
+ margin: 4px 6px;
+ background: var(--ss-border);
 }
 .popup.hidden{
 	display: none;

@@ -8,11 +8,14 @@
         <input type="text" class="name" value="{{! it.en.name }}" data-i18n-placeholder="engine_name_placeholder">
     </td>
     <td>
-        {{? it.en.is_submenu }}
-            <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="submenu_url_placeholder">
-        {{??}}
-            <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="engine_url_placeholder">
-        {{?}}
+        <div class="url-field">
+            {{? it.en.is_submenu }}
+                <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="submenu_url_placeholder">
+            {{??}}
+                <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="engine_url_placeholder">
+            {{?}}
+            <button type="button" class="url-expand" data-i18n-title="edit_url_title"></button>
+        </div>
     </td>
     <td>
         <input class="icon_url" type="text" data-i18n-placeholder="icon_url_placeholder" value="{{! it.en.icon_url || '' }}">
