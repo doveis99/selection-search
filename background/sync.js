@@ -81,8 +81,8 @@ const Sync = new function(){
             chrome.notifications.create({
                 type: 'basic',
                 iconUrl: '/img/icon48.png',
-                title: 'Synchronization Error',
-                message: 'Failed to synchronize you settings. Sync has been disabled. ('+chrome.runtime.lastError['message']+')'
+                title: i18n('notif_sync_error_title'),
+                message: i18n('notif_sync_failed', [chrome.runtime.lastError['message']])
             });
 
         });
@@ -206,8 +206,8 @@ const Sync = new function(){
             chrome.notifications.create({
                 type: 'basic',
                 iconUrl: '/img/icon48.png',
-                title: 'Synchronization Error',
-                message: 'Failed to parse chunked search engines ('+e+')'
+                title: i18n('notif_sync_error_title'),
+                message: i18n('notif_sync_parse_failed', [String(e)])
             });
             return [];
 
@@ -227,8 +227,8 @@ const Sync = new function(){
                 chrome.notifications.create({
                     type: 'basic',
                     iconUrl: '/img/icon48.png',
-                    title: 'Synchronization Error',
-                    message: 'Failed to update synced settings ('+chrome.runtime.lastError['message']+')'
+                    title: i18n('notif_sync_error_title'),
+                    message: i18n('notif_sync_update_failed', [chrome.runtime.lastError['message']])
                 });
                 return;
             }

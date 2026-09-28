@@ -5,12 +5,12 @@ $(document).ready(function (){
 	var query = document.location.search.substr(1).split('=');
 
 	if(query.length != 2){
-		$("#error").text('Search failed');
+		$("#error").text(i18n('search_failed'));
 		return;
 	}
 
 	if(query[0] != 'url'){
-		$("#error").text('Search failed');
+		$("#error").text(i18n('search_failed'));
 		return;
 	}
 
@@ -28,7 +28,7 @@ $(document).ready(function (){
 	parts = url.split('{POSTARGS}', 2);
 
 	if(parts.length != 2){
-		$("#error").text('Invalid url for a POST search. The url must contain "{POSTARGS}"');
+		$("#error").text(i18n('post_invalid_url'));
 		return;
 	}
 

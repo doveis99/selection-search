@@ -11,23 +11,24 @@ function EngineEditor(_shadowDOM){
 	var _nameEdit = $('<input type="text" />');
 	var _urlEdit = $('<input type="text" />');
 	var _iconEdit = $('<input type="text" />');
-	var _saveButton = $('<input type="button" value="Save" />');
-	var _cancelButton = $('<input type="button" value="Cancel" />');
+	var _saveButton = $('<input type="button" />').val(i18n('editor_save'));
+	var _cancelButton = $('<input type="button" />').val(i18n('editor_cancel'));
 
 	var _postForm = false;
 
 	var _that = this;
 
 
-	_editor.append('<span>Name:</span>');
+	_editor.append($('<span></span>').text(i18n('editor_name')));
 	_editor.append(_nameEdit);
-	_editor.append('<span>Url:</span>');
+	_editor.append($('<span></span>').text(i18n('editor_url')));
 	_editor.append(_urlEdit);
-	_editor.append('<span>Icon url:</span>');
+	_editor.append($('<span></span>').text(i18n('editor_icon_url')));
 	_editor.append(_iconEdit);
 
 
-	var _titleBar = $('<h4 style="padding-left: 20px; background: url(\''+chrome.runtime.getURL('img/icon16.png')+'\') no-repeat left top;"><input style="background: url(\''+chrome.runtime.getURL('img/close.png')+'\') no-repeat center center;" class="close" type="button" value="" /><span class="title">Add search engine</span></h4>');
+	var _titleBar = $('<h4 style="padding-left: 20px; background: url(\''+chrome.runtime.getURL('img/icon16.png')+'\') no-repeat left top;"><input style="background: url(\''+chrome.runtime.getURL('img/close.png')+'\') no-repeat center center;" class="close" type="button" value="" /><span class="title"></span></h4>');
+	_titleBar.find('.title').text(i18n('editor_title'));
 	_editorContainer.append(_titleBar);
 	_editorContainer.append(_editor);
 	_editorContainer.append(_loading);

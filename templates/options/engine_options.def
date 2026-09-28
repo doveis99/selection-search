@@ -1,171 +1,166 @@
 <td class="engine-options">
 
-    <a href="#" class="engine-opts-link">&nbsp;</a>
+    <a href="#" class="engine-opts-link" data-i18n-title="engine_opt_title">&nbsp;</a>
 
     <div class="engine-options-popup dropdown-popup">
-        <a href="#" class="close-popup"></a>
+        <a href="#" class="close-popup" data-i18n-title="close"></a>
         {{ if(!it.en.is_submenu && !it.en.is_separator) { }}
-            <label for="engine-opt-post-{{= it.id }}">Use post method</label>
-            <input class="post" id="engine-opt-post-{{=it.id}}" type="checkbox">
-            <hr>
+            <div class="opt-group">
+                <label class="opt-check">
+                    <input class="post" id="engine-opt-post-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_post"></span>
+                </label>
+            </div>
         {{ } }}
-        <p><strong>Show in:</strong></p>
-        <p>
-            <input type="checkbox" class="hide_in_ctx" id="engine-opt-ctx-{{=it.id}}">
-            <label for="engine-opt-ctx-{{=it.id}}">Context menu</label>
-        </p>
-        <p>
-            <input type="checkbox" class="hide_in_popup" id="engine-opt-popup-{{=it.id}}">
-            <label for="engine-opt-popup-{{=it.id}}">Popup</label>
-        </p>
-        <p>
-            <input type="checkbox" class="hide_in_toolbar" id="engine-opt-toolbar-{{=it.id}}">
-            <label for="engine-opt-toolbar-{{=it.id}}">Toolbar Popup</label>
-        </p>
-        <p class="separate-menus-msg">
-            This only has effect when the "Separate search engines" option is checked
-            below in "Other Options" section.
-        </p>
+
+        <div class="opt-group">
+            <p class="opt-title" data-i18n="engine_opt_show_in"></p>
+            <label class="opt-check">
+                <input type="checkbox" class="hide_in_popup" id="engine-opt-popup-{{=it.id}}">
+                <span data-i18n="engine_opt_show_popup"></span>
+            </label>
+            <label class="opt-check">
+                <input type="checkbox" class="hide_in_ctx" id="engine-opt-ctx-{{=it.id}}">
+                <span data-i18n="engine_opt_show_ctx"></span>
+            </label>
+            <label class="opt-check">
+                <input type="checkbox" class="hide_in_toolbar" id="engine-opt-toolbar-{{=it.id}}">
+                <span data-i18n="engine_opt_show_toolbar"></span>
+            </label>
+            <p class="opt-desc" data-i18n="engine_opt_show_in_note"></p>
+        </div>
+
         {{ if(!it.en.is_submenu && !it.en.is_separator) { }}
-            <hr>
-            <input class="hide_on_click" id="engine-opt-hide-on-click-{{=it.id}}" type="checkbox">
-            <label for="engine-opt-hide-on-click-{{= it.id }}">Hide menu on click</label>
-            <p class="separate-menus-msg">
-                The menu will be hidden after clicking this search engine.
-            </p>
+            <div class="opt-group">
+                <label class="opt-check">
+                    <input class="hide_on_click" id="engine-opt-hide-on-click-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_hide_on_click"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_hide_on_click_desc"></p>
+            </div>
         {{ } }}
 
         {{? it.en.is_submenu }}
+            <div class="opt-group">
+                <label class="opt-check">
+                    <input class="openall" id="engine-opt-openall-{{=it.id}}" type="checkbox" />
+                    <span data-i18n="engine_opt_openall"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_openall_desc"></p>
 
+                <div class="hide_menu_wrap opt-group indent">
+                    <label class="opt-check">
+                        <input class="hidemenu" id="engine-opt-hidemenu-{{=it.id}}" type="checkbox" />
+                        <span data-i18n="engine_opt_hidemenu"></span>
+                    </label>
+                    <p class="opt-desc" data-i18n="engine_opt_hidemenu_desc"></p>
 
-            <hr>
+                    <label class="opt-check">
+                        <input class="hide_on_click" id="engine-opt-hide-on-click-{{=it.id}}" type="checkbox" />
+                        <span data-i18n="engine_opt_hide_on_click"></span>
+                    </label>
+                    <p class="opt-desc" data-i18n="engine_opt_hide_on_click_submenu_desc"></p>
 
-            <input class="openall" id="engine-opt-openall-{{=it.id}}" type="checkbox" />
-            <label for="engine-opt-openall-{{=it.id}}">Open all on click</label>
-
-            <p class="separate-menus-msg" style="margin-bottom: 0.8em;">When this is checked all search engines
-            in this submenu will be opened at once.</p>
-
-            <div class="hide_menu_wrap" style="padding-left: 0.5em;">
-                <input class="hidemenu" id="engine-opt-hidemenu-{{=it.id}}" type="checkbox" />
-                <label for="engine-opt-hidemenu-{{=it.id}}">Don't show menu</label>
-                <p class="separate-menus-msg">When this is checked the submenu will not
-                open on mouse over. It will just open all searches inside on click.
-                (Has no effect in the toolbar popup)
-                </p>
-
-                <input style="margin-top: 0.8em;" class="hide_on_click" id="engine-opt-hide-on-click-{{=it.id}}" type="checkbox" />
-                <label for="engine-opt-hide-on-click-{{=it.id}}">Hide menu on click</label>
-                <p class="separate-menus-msg">The menu will be hidden after clicking this submenu</p>
-
-                <input style="margin-top: 0.8em;" class="openall_aux" id="engine-opt-open-all-aux-{{=it.id}}" type="checkbox" />
-                <label for="engine-opt-open-all-aux-{{=it.id}}">Only on middle click</label>
-                <p class="separate-menus-msg">When checked, all engines will only open when the submenu is clicked with the middle
-                mouse button. (This option has no effect in the right click context menu)</p>
-
+                    <label class="opt-check">
+                        <input class="openall_aux" id="engine-opt-open-all-aux-{{=it.id}}" type="checkbox" />
+                        <span data-i18n="engine_opt_openall_aux"></span>
+                    </label>
+                    <p class="opt-desc" data-i18n="engine_opt_openall_aux_desc"></p>
+                </div>
             </div>
-
-
         {{?}}
 
         {{? !it.en.is_separator }}
-
-            <div class="engine-opt-background_tab">
-                <hr>
-                <p>Open in background tab</p>
-
-                <input type="checkbox" class="background_global" id="engine-opts-background_tab_global-{{=it.id}}"/>
-                <label for="engine-opts-background_tab_global-{{=it.id}}">Use global settings</label>
-
-                <div style="padding-left: 1.5em;">
-                    <input type="checkbox" class="background_tab" id="engine-opts-background_tab-{{=it.id}}">
-                    <label for="engine-opts-background_tab-{{=it.id}}">Open in background tab</label>
+            <div class="engine-opt-background_tab opt-group">
+                <p class="opt-title" data-i18n="engine_opt_background"></p>
+                <label class="opt-check">
+                    <input type="checkbox" class="background_global" id="engine-opts-background_tab_global-{{=it.id}}"/>
+                    <span data-i18n="engine_opt_background_global"></span>
+                </label>
+                <div class="opt-group indent">
+                    <label class="opt-check">
+                        <input type="checkbox" class="background_tab" id="engine-opts-background_tab-{{=it.id}}">
+                        <span data-i18n="engine_opt_background_tab"></span>
+                    </label>
                 </div>
             </div>
 
+            <div class="opt-group">
+                <p class="opt-title" data-i18n="engine_opt_open_heading"></p>
+
+                <label class="opt-check">
+                    <input class="open_in_incognito" id="engine-opt-open-in-incognito-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_incognito"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_incognito_desc"></p>
+
+                <label class="opt-check">
+                    <input class="open_in_window" id="engine-opt-open-in-window-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_new_window"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_new_window_desc"></p>
+
+                <label class="opt-check">
+                    <input class="open_in_popup" id="engine-opt-open-in-popup-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_popup_window"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_popup_window_desc"></p>
+
+                <label class="opt-check">
+                    <input class="negate_newtab_option" id="engine-opt-negate-newtab-option-{{=it.id}}" type="checkbox">
+                    <span data-i18n="engine_opt_negate_newtab"></span>
+                </label>
+                <p class="opt-desc" data-i18n="engine_opt_negate_newtab_desc"></p>
+
+                {{? it.en.is_submenu }}
+                    <p class="opt-desc strong" data-i18n="engine_opt_submenu_url_note"></p>
+                {{?}}
+            </div>
         {{?}}
 
+        <div class="opt-group">
+            <label class="opt-check">
+                <input class="nosync" id="engine-opt-sync-{{=it.id}}" type="checkbox" />
+                <span data-i18n="engine_opt_sync"></span>
+            </label>
+        </div>
 
         {{ if(!it.en.is_separator) { }}
-
-            <hr>
-            <input class="open_in_incognito" id="engine-opt-open-in-incognito-{{=it.id}}" type="checkbox">
-            <label for="engine-opt-open-in-incognito-{{= it.id }}">Incognito mode</label>
-            <p class="separate-menus-msg">
-                The search will open in a new incognito window
-                {{ if(it.en.is_submenu) { }}
-                <p class="separate-menus-msg"><strong>(Only if you have defined a custom search url for this submenu.)</strong></p>
-                {{ } }}
-            </p>
-
-            <hr>
-            <input class="open_in_window" id="engine-opt-open-in-window-{{=it.id}}" type="checkbox">
-            <label for="engine-opt-open-in-window-{{= it.id }}">New window</label>
-            <p class="separate-menus-msg">
-                The search will open in a new browser window
-                {{ if(it.en.is_submenu) { }}
-                <p class="separate-menus-msg"><strong>(Only if you have defined a custom search url for this submenu.)</strong></p>
-                {{ } }}
-            </p>
-
-            <hr>
-            <input class="open_in_popup" id="engine-opt-open-in-popup-{{=it.id}}" type="checkbox">
-            <label for="engine-opt-open-in-popup-{{= it.id }}">Use popup window</label>
-            <p class="separate-menus-msg">
-                The new window will be a small popup window. (Only have effects if "new window" or "incognito mode" is enabled)
-            </p>
-
-            <hr>
-            <input class="negate_newtab_option" id="engine-opt-negate-newtab-option-{{=it.id}}" type="checkbox">
-            <label for="engine-opt-negate-newtab-option-{{= it.id }}">Negate newtab option</label>
-            <p class="separate-menus-msg">
-                When this option is enabled, it will negate the global open in new tab option for this search engine.
-                {{ if(it.en.is_submenu) { }}
-                <p class="separate-menus-msg"><strong>(Only if you have defined a custom search url for this submenu.)</strong></p>
-                {{ } }}
-            </p>
-
-        {{ } }}
-
-
-        <hr>
-        <input class="nosync" id="engine-opt-sync-{{=it.id}}" type="checkbox" />
-        <label for="engine-opt-sync-{{=it.id}}">Synchronize</label>
-
-        {{ if(!it.en.is_separator) { }}
-        <hr>
-        <input class="hotkey-definition-input" id="engine-opt-hotkey-{{=it.id}}" type="text" placeholder="Hotkey" />
-        <a href="#" class="clear-hotkey">[Clear hotkey]</a>
-        <p class="separate-menus-msg">
-            Use this shortcut hotkey to search the selected text with this search engine.
-        </p>
+            <div class="opt-group">
+                <p class="opt-title" data-i18n="engine_opt_hotkey"></p>
+                <div class="opt-hotkey">
+                    <input class="hotkey-definition-input" id="engine-opt-hotkey-{{=it.id}}" type="text" data-i18n-placeholder="engine_opt_hotkey_placeholder" />
+                    <a href="#" class="clear-hotkey" data-i18n="engine_opt_clear_hotkey"></a>
+                </div>
+                <p class="opt-desc" data-i18n="engine_opt_hotkey_desc"></p>
+            </div>
         {{ } }}
     </div>
 </td>
 <td>
-    <a href="#" class="add-inline">+</a>
+    <a href="#" class="add-inline" data-i18n-title="add_inline_title">+</a>
 
     <div class="add-inline-popup dropdown-popup">
         <div class="add-inline-content">
             <p>
-                <button class="add-inline-button add-inline-engine add-before"></button>
-                <span>Search Engine</span>
-                <button class="add-inline-button add-inline-engine add-after"></button>
+                <button class="add-inline-button add-inline-engine add-before" data-i18n-title="add_before"></button>
+                <span data-i18n="add_inline_engine"></span>
+                <button class="add-inline-button add-inline-engine add-after" data-i18n-title="add_after"></button>
             </p>
             <p>
-                <button class="add-inline-button add-inline-submenu add-before"></button>
-                <span>Submenu</span>
-                <button class="add-inline-button add-inline-submenu add-after"></button>
+                <button class="add-inline-button add-inline-submenu add-before" data-i18n-title="add_before"></button>
+                <span data-i18n="add_inline_submenu"></span>
+                <button class="add-inline-button add-inline-submenu add-after" data-i18n-title="add_after"></button>
             </p>
             <p>
-                <button class="add-inline-button add-inline-separator add-before"></button>
-                <span>Separator</span>
-                <button class="add-inline-button add-inline-separator add-after"></button>
+                <button class="add-inline-button add-inline-separator add-before" data-i18n-title="add_before"></button>
+                <span data-i18n="add_inline_separator"></span>
+                <button class="add-inline-button add-inline-separator add-after" data-i18n-title="add_after"></button>
             </p>
         </div>
     </div>
 
 </td>
 <td>
-    <a href="#" class="delete">X</a>
+    <a href="#" class="delete" data-i18n-title="delete">&times;</a>
 </td>

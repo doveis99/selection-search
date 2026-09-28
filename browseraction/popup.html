@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8" />
 <style>
@@ -111,7 +111,7 @@
 <div class="container">
 
 <div class="input-wrapper">
-<input class="search-input" name="q" type="search" placeholder="Search something!" autocomplete="off" autofocus>
+<input class="search-input" name="q" type="search" data-i18n-placeholder="toolbar_search_placeholder" autocomplete="off" autofocus>
 <ul class="suggestions">
 </ul>
 <template id="suggestion-template">
@@ -131,6 +131,7 @@
 </template>
 
 <script src="/common/browsersupport.js"></script>
+<script src="/common/i18n.js"></script>
 <script src="/common/encoding.js"></script>
 <script src="/common/actionutils.js"></script>
 <script src="/common/urlparse.js"></script>

@@ -126,8 +126,8 @@ function Background(_previousVersion) {
                 chrome.notifications.create({
                     type: 'basic',
                     iconUrl: '/img/icon48.png',
-                    title: 'Synchronization Error',
-                    message: 'Failed to load synced settings ('+chrome.runtime.lastError['message']+')'
+                    title: i18n('notif_sync_error_title'),
+                    message: i18n('notif_sync_load_failed', [chrome.runtime.lastError['message']])
                 });
 
                 _storageUpdated();

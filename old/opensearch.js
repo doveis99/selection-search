@@ -38,14 +38,14 @@ var OpenSearch = {
 	/* parses only GET searches */
 	getEngineFromXML : function (xml){
 
-		var ret = {'status' : 'ERROR', 'msg' : 'Error parsing opensearch document'}
+		var ret = {'status' : 'ERROR', 'msg' : i18n('opensearch_error_parse')}
 
 		var name = $(xml).find('ShortName').first().text();
 
 		var _url = $(xml).find('Url[type="text/html"]').first();
 
 		if(_url.length == 0){
-			ret['msg'] = 'Unsupported url mimetype';
+			ret['msg'] = i18n('opensearch_error_mimetype');
 			return ret;
 		}
 

@@ -1,6 +1,7 @@
 
 importScripts(
     "../common/browsersupport.js",
+    "../common/i18n.js",
     "../common/urlparse.js",
     "../common/encoding.js",
     "../common/actionutils.js",

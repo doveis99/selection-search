@@ -3,19 +3,19 @@
 {{??}}
 <tr class="search-engine" id="search-engine-{{=it.id}}">
 {{?}}
-    <td class="drag-target"></td>
+    <td class="drag-target" data-i18n-title="drag_to_reorder"></td>
     <td>
-        <input type="text" class="name" value="{{! it.en.name }}">
+        <input type="text" class="name" value="{{! it.en.name }}" data-i18n-placeholder="engine_name_placeholder">
     </td>
     <td>
         {{? it.en.is_submenu }}
-            <input type="text" class="url" value="{{! it.en.url }}" placeholder="Submenu">
+            <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="submenu_url_placeholder">
         {{??}}
-            <input type="text" class="url" value="{{! it.en.url }}">
+            <input type="text" class="url" value="{{! it.en.url }}" data-i18n-placeholder="engine_url_placeholder">
         {{?}}
     </td>
     <td>
-        <input class="icon_url" type="text" placeholder="(Use default)" value="{{! it.en.icon_url || '' }}">
+        <input class="icon_url" type="text" data-i18n-placeholder="icon_url_placeholder" value="{{! it.en.icon_url || '' }}">
     </td>
 
     {{#def.engine_options}}

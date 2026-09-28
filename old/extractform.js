@@ -35,7 +35,7 @@ function initFormExtractor(engineEditor){
 		engineEditor.show(e.pageX, e.pageY);
 
 		if(form.length == 0 || !(method.toLowerCase() == 'get' || method.toLowerCase() == 'post') || !this.name){
-			engineEditor.showError('Error parsing form');
+			engineEditor.showError(i18n('editor_error_parse_form'));
 			return;
 		}
 

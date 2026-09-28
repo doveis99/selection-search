@@ -201,7 +201,7 @@ function ContextMenu(options, _clickCounterCallback){
             let id = _nextItemId()
             chrome.contextMenus.create({
                 'id': id,
-                'title' :  "Open all",
+                'title' :  i18n('contextmenu_open_all'),
                 'contexts' :  ['selection'],
                 'parentId' : parentItem,
             }, function(){
@@ -235,7 +235,7 @@ function ContextMenu(options, _clickCounterCallback){
 
                 chrome.contextMenus.create({
                     'id': _rootItem,
-                    'title' : 'Search',
+                    'title' : i18n('contextmenu_root'),
                     'contexts' : contexts
                 }, () => {
                     resolve()

@@ -408,8 +408,8 @@ function DataStore(kwStore){
         chrome.notifications.create({
             type: 'basic',
             iconUrl: '/img/icon48.png',
-            title: 'Online Synchronization',
-            message: 'Synchronization of search engines and settings between browsers is now available. It has been disabled by default, but can be enabled in the settings.'
+            title: i18n('notif_sync_available_title'),
+            message: i18n('notif_sync_available')
         });
 
     }

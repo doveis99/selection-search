@@ -145,7 +145,7 @@ function createEngineNodes(engines, options, in_submenu, backCallback){
 
 
     if(in_submenu){
-        let backNode = createBackNode('Back')
+        let backNode = createBackNode(i18n('toolbar_back'))
         let a = backNode.querySelector('.engine-link')
         a.addEventListener('click', (e) => {
             if(isTriggeredByKeyboard(e)){
@@ -260,6 +260,8 @@ function SelectionUtil(){
 }
 
 
+
+applyI18n(document);
 
 let engineTemplate = document.getElementById('search-engine-template')
 let suggestionTemplate = document.getElementById('suggestion-template')

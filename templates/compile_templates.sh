@@ -2,6 +2,8 @@
 
 # doT templates is needed. (npm install)
 
+# The output folder must exist, dot-packer creates it asynchronously.
+mkdir -p _compiled
 ./dot-packer -s options -d _compiled
 
 cat _compiled/folder_end.js > options.js

@@ -60,7 +60,7 @@ $("a[href^='/install-splash.php']").each(function(){
 
 	$(this).before(
 		$('<a href="#"></a>').append(
-			$('<img class="icon" alt="Add to Chrome Selection Search" title="Add to Chrome Selection Search" />').attr('src', chrome.runtime.getURL('img/icon16.png')).css({
+			$('<img class="icon" />').attr({'alt': i18n('mycroft_add'), 'title': i18n('mycroft_add')}).attr('src', chrome.runtime.getURL('img/icon16.png')).css({
 				'margin' : '0 8px 0 3px',
 				'width' : '16px', 'height' : '16px',
 			})
@@ -79,8 +79,8 @@ $("a[href^='/install-splash.php']").each(function(){
 
 if(foundOpenSearchEngines){
 	$('table.altrowgw:last tr:first-child').after(
-		$('<tr><td><img class="icon" title="Chrome Selection Search" width="16px" height="16px" src="'+chrome.runtime.getURL('img/icon16.png')+'" />'+
-		' Add search engine to Chrome <a href="https://chrome.google.com/extensions/detail/gipnlpdeieaidmmeaichnddnmjmcakoe">Selection Search</a> extension.</td></tr>')
+		$('<tr><td><img class="icon" title="Selection Search" width="16px" height="16px" src="'+chrome.runtime.getURL('img/icon16.png')+'" /> '+
+		i18n('mycroft_banner') + '</td></tr>')
 	);
 }
 

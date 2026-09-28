@@ -1,9 +1,11 @@
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>Selection Search - Options</title>
+<title>Selection Search</title>
 <link type="text/css" rel="stylesheet" href="options.css" />
 <script src="../common/jquery-3.6.4.min.js"></script>
+<script src="../common/i18n.js"></script>
 <script src="../background/storage.js"></script>
 <script src="../background/storage_local.js"></script>
 <script src="../popup/style.js"></script>
@@ -20,650 +22,753 @@
 </head>
 <body>
 
-<div id="content">
+<div class="layout">
 
-<div class="page-header">
-	<h1 id="main-heading">Selection Search Options</h1>
-	<div class="buy-me-a-coffee">
-		<script type="text/javascript" src="buy-coffee-button-1.0.0.prod.min.js" data-name="bmc-button" data-slug="pitmairen" data-color="#1364bb" data-emoji="☕"  data-font="Comic" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+<aside class="sidebar">
+	<div class="brand">
+		<img src="../img/icon48.png" width="36" height="36" alt="" />
+		<div>
+			<h1 id="main-heading">Selection Search</h1>
+			<span class="brand-version" id="ext-version"></span>
+		</div>
 	</div>
-</div>
 
+	<nav class="nav" id="nav">
+		<a href="#tab-engines" data-tab="engines" data-i18n="nav_engines"></a>
+		<a href="#tab-general" data-tab="general" data-i18n="nav_general"></a>
+		<a href="#tab-popup" data-tab="popup" data-i18n="nav_popup"></a>
+		<a href="#tab-contextmenu" data-tab="contextmenu" data-i18n="nav_contextmenu"></a>
+		<a href="#tab-toolbar" data-tab="toolbar" data-i18n="nav_toolbar"></a>
+		<a href="#tab-sync" data-tab="sync" data-i18n="nav_sync"></a>
+		<a href="#tab-backup" data-tab="backup" data-i18n="nav_backup"></a>
+	</nav>
 
-<h2 class="section-heading">Search engines</h2>
-<p class="info">The search url must start with http://. The special string <strong>%s</strong> will be replaced with the selected text if present. Search engines without %s can still be used when "Allow engines without selection" is enabled in Other Options.
-<br />Searches that uses the POST method must contain a <strong>{POSTARGS}</strong> separator with the post arguments added after it, like this:
-http://example.com/search/<strong>{POSTARGS}</strong>q=<strong>%s</strong>&amp;type=123. <a href="#" id="show-more-variables">More Variables</a>
-
-</p>
-<div id="more-variables" class="info">
-<strong>Example url:</strong> https://chrome.google.com/webstore/detail/gipnlpdeieaidmmeaichnddnmjmcakoe?key1=value1&key2=value2
-<dl>
-	<dt>%PAGE_HOST</dt>
-	<dd>The hostname and port of the current page. (chrome.google.com)</dd>
-	<!--	<dt>%PAGE_HOSTNAME</dt>
-      <dd>The hostname of the current page. (chrome.google.com)</dd>-->
-	<!--	<dt>%PAGE_DOMAIN</dt>
-      <dd>The domain of the current page. (google.com)</dd>-->
-	<dt>%PAGE_URL</dt>
-	<dd>The entire URL of the current page.
-		(https://chrome.google.com/webstore/detail/gipnlpdeieaidmmeaichnddnmjmcakoe)
-	</dd>
-	<!--	<dt>%PAGE_PATH</dt>
-      <dd>The path name of the current page. (/webstore/detail/gipnlpdeieaidmmeaichnddnmjmcakoe)</dd>-->
-	<dt>%PAGE_ORIGIN</dt>
-	<dd>The protocol and hostname of the current page. (https://chrome.google.com)</dd>
-	<dt>%PAGE_ORIGIN_NO_ENCODING</dt>
-	<dd>The protocol and hostname of the current page without URL encoding for raw usage in URL.
-		(https://chrome.google.com)
-	</dd>
-
-	<dt>%PAGE_QUERY_STRING</dt>
-	<dd>The query string of the current page (key1=value1&key2=value2)</dd>
-
-	<dt>%PAGE_QS_VAR(name)</dt>
-	<dd>A query string variable from the current page (%PAGE_QS_VAR(key1) == value1)</dd>
-
-	<dt>%PAGE_QS_VAR_NO_ENCODING(name)</dt>
-	<dd>A query string variable from the current page (%PAGE_QS_VAR(key1) == value1), but does not
-		encode special characters
-	</dd>
-</dl>
-
-<strong>For Icon url:</strong>
-<dl>
-	<dt>CURRENT_DOMAIN</dt>
-		<dd>If icon url is set to "CURRENT_DOMAIN" the favicon from the current domain will be used.</dd>
-</dl>
-
-<strong>Search url:</strong>
-<dl>
-	<dt>COPY</dt>
-		<dd>If the search url is set to "COPY" the selcetion will be copied to the clipboard.</dd>
-
-	<dt>{%+s}</dt>
-		<dd>Using <strong>{%+s}</strong> as a placeholder will replace spaces in the selection with +</dd>
-
-    <dt>{%(RAW)s}</dt>
-        <dd>Using <strong>{%(RAW)s}</strong> as a placeholder will insert the selection into the url without doing any encoding/escaping</dd>
-
-	<dt>{%(CP1251)s}</dt>
-        <dd>Using <strong>{%(CP1251)s}</strong> as a placeholder will encode the selection with CP1251/cyrillic encoding. This is used by some russian sites. <br><br>
-		For searches using <strong>POST</strong> method you should <strong>not</strong> use the {%(CP1251)s} placeholder, instead append the following to the search url <strong>{POSTENCODING}CP1251</strong>.<br> Example: http://example.com/search/{POSTARGS}q=%s&type=123{POSTENCODING}CP1251</dd>
-    <dt>{SPECIALENCODING}</dt>
-        <dd>
-			<p>
-			Some web sites require the selected text to be encoded in an encoding other the default UTF-8 encoding.
-			This is often the case for Asian and Russian sites.
-			</p>
-			<p>
-			If your search does not work correctly and the
-			searched text ends up with weird/scrambled characters, you can try to append {SPECIALENCODING} to the
-			end of the search url.<br>
-			http://example.com/search?q=%s{SPECIALENCODING}
-			</p>
-			<p>
-			This may be enough to make the search work. If it still does not work, you can specify the excact encoding
-			like so:<br>
-			http://example.com/search?q=%s{SPECIALENCODING}EUC-KR
-			 </p>
-	</dd>
-</dl>
-<strong>Converters:</strong>
-    <p>Converters can be used to transform the selection before it is inserted into the url. They work with the {%s}, {%+s} and {%(CP1251)s} placeholders.</p>
-    <dl>
-        <dt>{%s|upper} or {%+s|upper} or {%(CP1251)s|upper}</dt>
-            <dd>Using the <strong>upper</strong> converter will convert the selection to all upper case letters (My Selection) =&gt; MY SELECTION</dd>
-
-        <dt>{%s|lower} or {%+s|lower} or {%(CP1251)s|lower}</dt>
-		<dd>Using the <strong>lower</strong> converter will convert the selection to all lower case letters. (My Selection =&gt; my selection)</dd>
-	</dl>
-
-	<p><strong>Advanced replacement converter:</strong></p>
-	<p>This converter uses regular expressions</a> to allow user defined replacements on the selection.
-	The regular expression syntax uses the standard javascript
-		<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regular expression syntax</a>.
-	</p>
-	<p>Usage:</p>
-	<p>{%s|replace:/&lt;match&gt;/&lt;replacement&gt;/&lt;flags&gt;}</p>
-	<p><strong>match</strong> Regular expression to match something in the string</p>
-	<p><strong>replacement</strong> What to replace the match with. Can contain $1, $2,...,$n, values that are
-	replaced with the corresponding regular expression match group.</p>
-	<p><strong>flags</strong> Optional, a list of regular expression flags.</p>
-	<p><strong>/</strong> is normally used as a separator in the expressions. If you need to use this character for
-		something else in the expression you can use any other character as a separator ( "|" and "}" can be problematic).
-		The first character after "replace:" is used as the separator. So {%s|replace:#/#!#g} is valid and will replace all "/" with "!".
-	</p>
-	<p>
-		The character "|", has special meaning in regular expressions. If you want to use this character in your
-		expression you have to use a double "||" as your converter separator.
-	</p>
-	<p>
-		Also if you need to use "}" in the expression, you have to use "\}" as this character is used to enclose the
-		selection placeholder. (This is currently not working properly)
-	</p>
-
-	<p>Examples:</p>
-	<dl>
-		<dt>{%s|replace:/\s+/-/g}</dt>
-		<dd>Replaces all whitespace in the selection with "-".</dd>
-		<dt>{%s|replace:/\s+//g}</dt>
-		<dd>Remove any whitespace in the selection.</dd>
-		<dt>{%s|replace:/a/b}</dt>
-		<dd>Remove first a in the selection with a b.</dd>
-		<dt>{%s|replace:/([\d.]+)/$$$1/g}</dt>
-		<dd>Adds $ to the front of any number in the selection. A tripple $ must be used because the first two
-			is needed to produce a literal $ in the replacement, and the last $1 is replaced with the matched number.
-		</dd>
-		<dt>{%s||replace:/apple|orange/fruit/gi}</dt>
-		<dd>Replace apple or orange with fruite, ignores case differences. Notice the use of "||" as the converter separator, because
-			"|" is used in the replacement expression
-		</dd>
-	</dl>
-
-</div>
-
-
-<table id="engines">
-	<tr class="drag-stop">
-		<th></th>
-		<th>Name</th>
-		<th>Search url</th>
-		<th>Icon url</th>
-		<th></th>
-		<th>Add</th>
-		<th>Delete</th>
-	</tr>
-</table>
-<p class="buttons"><input type="button" value="Add New Search Engine"  id="new-engine" /> <input type="button" value="Add New Submenu"  id="new-folder" /> <input type="button" value="Add New Separator"  id="new-separator" /></p>
-
-
-<h2 class="section-heading">Find Search Engines</h2>
-
-<p class="info">
-<strong>CTRL+ALT + click:</strong><br />
-You can add new engines by finding a form and holding down <strong>CTRL</strong>+<strong>ALT</strong> on the keyboard and clicking inside the input where you would type you search query. <br />
-A popup should open where you can edit and save the search engine. This works for a lot of searches, but sometimes it doesn't work.
-
-
-<br /><br />
-<strong>mycroftproject.com:</strong><br />
-With the form below you can search for new search engines at mycroftproject.com. Look for this icon: <span id="search-icon"></span> in the search result and click it to add an engine.
-The search page must be completely loaded before the icon will show.
-Previously opened tabs must be reloaded to show the new engines.</p>
-
-<form id="find-engines" action="https://mycroftproject.com/search-engines.php" method="get">
-	<input type="text" name="name" placeholder="Search for new search engines" size="40" />
-	<input type="hidden" name="opensearch" value="yes" />
-	<input type="submit" value="Search mycroftproject.com" />
-</form>
-
-
-
-
-
-
-
-<h2 class="section-heading" id="activator_heading">Popup Menu</h2>
-
-<div class="section">
-
-<select id="select_activator"></select>
-
-<div class="activator_options" id="activator_click">
-	<p>The menu is activated by clicking on the selection with the mouse button you choose below.</p>
-	<p class="section-option"><label for="opt-button0">Left click:</label> <input id="opt-button0" type="radio" value="0" name="button" /> <label for="opt-button1">Middle click:</label> <input id="opt-button1" type="radio" value="1" name="button" /></p>
-</div>
-
-<div class="activator_options" id="activator_auto">
-    <p>
-    <input type="checkbox" id="auto_popup_show_menu_directly" /> <label for="auto_popup_show_menu_directly">Show the menu directly when selecting text.</label>
-    </p>
-    <p class="info">By default, a small button will appear when some text is selected,
-     and you can open the menu by moving the mouse over the button. Selecting
-     the above option skips showing this button and shows the menu directly.</p>
-    <div id="auto_popup_relative_to_mouse_content">
-      <p>
-        <input type="checkbox" id="auto_popup_relative_to_mouse" /> <label for="auto_popup_relative_to_mouse">Position the button relative to the mouse cursor.</label>
-      </p>
-      <p class="info">
-        When placed relative to the mouse cursor the button will appear to the top right of the cursor.
-        If you want to tweak the position this can be done with some custom css under "Advanced settings".
-      </p>
+	<div class="sidebar-footer">
+		<p class="muted" data-i18n="support_author"></p>
+		<a class="coffee-link" href="https://www.buymeacoffee.com/pitmairen" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
 	</div>
-    <p>
-    <input type="checkbox" id="auto_popup_in_inputs" /> <label for="auto_popup_in_inputs">Auto show in inputs.</label>
-    </p>
-	<p class="info">
-		With this option enabled, the auto activator will be enabled for inputs and textareas. Without this options
-		you have to CTRL + Left Click the selection in the input for the menu to show.
-		Make sure the "Show in inputs and textareas" in the advanced settings is enabled for this to work.
-	</p>
-	<p class="section-option">
-		<label for="opt-auto-open-delay">Auto Open Delay:</label>
-		<input id="opt-auto-open-delay" placeholder="Auto open delay" type="number" name="auto-open-delay" min="0" /> (in milliseconds, 1000 = 1 second)
-	</p>
-</div>
+</aside>
 
 
-
-<div class="activator_options" id="activator_k_and_m">
-
-	<p>The menu is activated by holding the keyboard combination you have choosen and clicking anywhere with the mouse button you have selected.</p>
-
-	<p>
-
-	<input type="text" id="k_and_m_keys" class="hotkey-definition-input" /> +
-	<select id="k_and_m_button">
-		<option value="0">Left click</option>
-		<option value="1">Middle click</option>
-		<option value="2">Right click</option>
-	</select>
-	</p>
-
-</div>
-
-<div id="hotkey_info" style="display: none;">The names that are shown of the keys that are pressed isn't always correct, but it should still work correctly.</div>
-
-<div class="activator_options" id="activator_combo">
-    <p>(Select the other activators to set the options for each activator.)</p>
-    <p><input type="checkbox" name="activator_combo" value="click" id="combo_click"> <label for="combo_click">Mouse Click</label></p>
-    <p><input type="checkbox" name="activator_combo" value="auto" id="combo_auto"> <label for="combo_auto">Auto</label></p>
-    <p><input type="checkbox" name="activator_combo" value="k_and_m" id="combo_k_and_m"> <label for="combo_k_and_m">Keyboard+Mouse</label></p>
-</div>
+<main id="content">
 
 
-	<a href="#" id="show-advanced-popup-opts">Advanced Settings</a>
+<!-- ===================================================== Search engines -->
+<section class="panel" id="panel-engines">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_engines"></h2>
+		<p data-i18n="engines_intro"></p>
+	</header>
+
+	<div class="card">
+
+		<div class="help-box">
+			<p data-i18n-html="engines_help_url"></p>
+			<p data-i18n-html="engines_help_post"></p>
+			<p><a href="#" id="show-more-variables" class="toggle-link" data-i18n="more_variables"></a></p>
+		</div>
+
+		<div id="more-variables" class="help-box reference">
+
+			<p><strong data-i18n="vars_example_url"></strong> <code>https://chrome.google.com/webstore/detail/gipnlpdeieaidmmeaichnddnmjmcakoe?key1=value1&amp;key2=value2</code></p>
+
+			<h4 data-i18n="vars_page_heading"></h4>
+			<dl>
+				<dt>%PAGE_HOST</dt>
+				<dd data-i18n="vars_page_host"></dd>
+				<dt>%PAGE_URL</dt>
+				<dd data-i18n="vars_page_url"></dd>
+				<dt>%PAGE_ORIGIN</dt>
+				<dd data-i18n="vars_page_origin"></dd>
+				<dt>%PAGE_ORIGIN_NO_ENCODING</dt>
+				<dd data-i18n="vars_page_origin_no_encoding"></dd>
+				<dt>%PAGE_QUERY_STRING</dt>
+				<dd data-i18n="vars_page_query_string"></dd>
+				<dt>%PAGE_QS_VAR(name)</dt>
+				<dd data-i18n="vars_page_qs_var"></dd>
+				<dt>%PAGE_QS_VAR_NO_ENCODING(name)</dt>
+				<dd data-i18n="vars_page_qs_var_no_encoding"></dd>
+			</dl>
+
+			<h4 data-i18n="vars_icon_heading"></h4>
+			<dl>
+				<dt>CURRENT_DOMAIN</dt>
+				<dd data-i18n="vars_current_domain"></dd>
+			</dl>
+
+			<h4 data-i18n="vars_url_heading"></h4>
+			<dl>
+				<dt>COPY</dt>
+				<dd data-i18n="vars_copy"></dd>
+				<dt>{%+s}</dt>
+				<dd data-i18n="vars_plus"></dd>
+				<dt>{%(RAW)s}</dt>
+				<dd data-i18n="vars_raw"></dd>
+				<dt>{%(CP1251)s}</dt>
+				<dd data-i18n-html="vars_cp1251"></dd>
+				<dt>{SPECIALENCODING}</dt>
+				<dd data-i18n-html="vars_special_encoding"></dd>
+			</dl>
+
+			<h4 data-i18n="vars_converters_heading"></h4>
+			<p data-i18n="vars_converters_intro"></p>
+			<dl>
+				<dt>{%s|upper} &middot; {%+s|upper} &middot; {%(CP1251)s|upper}</dt>
+				<dd data-i18n="vars_upper"></dd>
+				<dt>{%s|lower} &middot; {%+s|lower} &middot; {%(CP1251)s|lower}</dt>
+				<dd data-i18n="vars_lower"></dd>
+			</dl>
+
+			<h4 data-i18n="vars_replace_heading"></h4>
+			<div data-i18n-html="vars_replace_intro"></div>
+			<p><code>{%s|replace:/&lt;match&gt;/&lt;replacement&gt;/&lt;flags&gt;}</code></p>
+			<div data-i18n-html="vars_replace_usage"></div>
+
+			<p><strong data-i18n="vars_examples"></strong></p>
+			<dl>
+				<dt>{%s|replace:/\s+/-/g}</dt>
+				<dd data-i18n="vars_replace_ex1"></dd>
+				<dt>{%s|replace:/\s+//g}</dt>
+				<dd data-i18n="vars_replace_ex2"></dd>
+				<dt>{%s|replace:/a/b}</dt>
+				<dd data-i18n="vars_replace_ex3"></dd>
+				<dt>{%s|replace:/([\d.]+)/$$$1/g}</dt>
+				<dd data-i18n-html="vars_replace_ex4"></dd>
+				<dt>{%s||replace:/apple|orange/fruit/gi}</dt>
+				<dd data-i18n="vars_replace_ex5"></dd>
+			</dl>
+		</div>
+
+		<table id="engines">
+			<tr class="drag-stop">
+				<th></th>
+				<th data-i18n="col_name"></th>
+				<th data-i18n="col_url"></th>
+				<th data-i18n="col_icon"></th>
+				<th data-i18n="col_options"></th>
+				<th data-i18n="col_add"></th>
+				<th data-i18n="col_delete"></th>
+			</tr>
+		</table>
+
+		<p class="button-row">
+			<button type="button" class="btn" id="new-engine" data-i18n="add_engine"></button>
+			<button type="button" class="btn" id="new-folder" data-i18n="add_submenu"></button>
+			<button type="button" class="btn" id="new-separator" data-i18n="add_separator"></button>
+		</p>
+	</div>
+
+
+	<div class="card">
+		<h3 class="card-title" data-i18n="find_engines_heading"></h3>
+
+		<div class="setting-block">
+			<h4 data-i18n="find_engines_ctrl_alt_heading"></h4>
+			<p class="setting-desc" data-i18n-html="find_engines_ctrl_alt"></p>
+		</div>
+
+		<div class="setting-block">
+			<h4>mycroftproject.com</h4>
+			<p class="setting-desc" data-i18n-html="find_engines_mycroft"></p>
+
+			<form id="find-engines" action="https://mycroftproject.com/search-engines.php" method="get" target="_blank">
+				<input type="text" class="text-input" name="name" data-i18n-placeholder="find_engines_placeholder" />
+				<input type="hidden" name="opensearch" value="yes" />
+				<input type="submit" class="btn" data-i18n-value="find_engines_submit" />
+			</form>
+		</div>
+	</div>
+
+</section>
+
+
+<!-- ===================================================== General -->
+<section class="panel" id="panel-general">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_general"></h2>
+		<p data-i18n="general_intro"></p>
+	</header>
+
+	<div class="card">
+		<h3 class="card-title" data-i18n="general_open_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-newtab" data-i18n="opt_newtab"></label>
+			</div>
+			<div class="setting-control"><input id="opt-newtab" class="switch" type="checkbox" name="newtab" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-background-tab" data-i18n="opt_background_tab"></label>
+				<p class="setting-desc" data-i18n="opt_background_tab_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-background-tab" class="switch" type="checkbox" name="background_tab" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-open-new-tab-last" data-i18n="opt_open_new_tab_last"></label>
+				<p class="setting-desc" data-i18n="opt_open_new_tab_last_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-open-new-tab-last" class="switch" type="checkbox" name="open_new_tab_last" /></div>
+		</div>
+	</div>
+
+	<div class="card">
+		<h3 class="card-title" data-i18n="general_menu_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-allow-engines-without-selection" data-i18n="opt_allow_without_selection"></label>
+				<p class="setting-desc" data-i18n="opt_allow_without_selection_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-allow-engines-without-selection" class="switch" type="checkbox" name="allow-engines-without-selection" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-separate-engines" data-i18n="opt_separate_engines"></label>
+				<p class="setting-desc" data-i18n="opt_separate_engines_desc"></p>
+				<p class="setting-desc note" id="wrap-edit-separate-engines" data-i18n="opt_separate_engines_edit"></p>
+			</div>
+			<div class="setting-control"><input id="opt-separate-engines" class="switch" type="checkbox" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-sort-by-click" data-i18n="opt_sort_by_click"></label>
+				<p class="setting-desc" data-i18n="opt_sort_by_click_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-sort-by-click" class="switch" type="checkbox" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-selection-allow-newline" data-i18n="opt_allow_newline"></label>
+				<p class="setting-desc" data-i18n="opt_allow_newline_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-selection-allow-newline" class="switch" type="checkbox" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-disable-extractform" data-i18n="opt_disable_extractform"></label>
+				<p class="setting-desc" data-i18n="opt_disable_extractform_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-disable-extractform" class="switch" type="checkbox" /></div>
+		</div>
+	</div>
+
+</section>
+
+
+<!-- ===================================================== Popup menu -->
+<section class="panel" id="panel-popup">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_popup"></h2>
+		<p data-i18n="popup_intro"></p>
+	</header>
+
+	<div class="card">
+		<h3 class="card-title" id="activator_heading" data-i18n="activator_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="select_activator" data-i18n="activator_label"></label>
+			</div>
+			<div class="setting-control"><select id="select_activator" class="select-input"></select></div>
+		</div>
+
+		<div class="activator_options" id="activator_disabled">
+			<p class="setting-desc" data-i18n="activator_disabled_desc"></p>
+		</div>
+
+		<div class="activator_options" id="activator_combo">
+			<p class="setting-desc" data-i18n="activator_combo_desc"></p>
+			<div class="check-list">
+				<label><input type="checkbox" name="activator_combo" value="click" id="combo_click" /> <span data-i18n="activator_click"></span></label>
+				<label><input type="checkbox" name="activator_combo" value="auto" id="combo_auto" /> <span data-i18n="activator_auto"></span></label>
+				<label><input type="checkbox" name="activator_combo" value="k_and_m" id="combo_k_and_m" /> <span data-i18n="activator_k_and_m"></span></label>
+			</div>
+		</div>
+
+		<div class="activator_options" id="activator_click">
+			<h4 class="activator-title" data-i18n="activator_click"></h4>
+			<div class="setting">
+				<div class="setting-text">
+					<span class="setting-label" data-i18n="activator_click_button"></span>
+					<p class="setting-desc" data-i18n="activator_click_desc"></p>
+				</div>
+				<div class="setting-control segmented">
+					<input id="opt-button0" type="radio" value="0" name="button" /><label for="opt-button0" data-i18n="mouse_left"></label>
+					<input id="opt-button1" type="radio" value="1" name="button" /><label for="opt-button1" data-i18n="mouse_middle"></label>
+				</div>
+			</div>
+		</div>
+
+		<div class="activator_options" id="activator_auto">
+			<h4 class="activator-title" data-i18n="activator_auto"></h4>
+
+			<div class="setting">
+				<div class="setting-text">
+					<label class="setting-label" for="auto_popup_show_menu_directly" data-i18n="auto_show_directly"></label>
+					<p class="setting-desc" data-i18n="auto_show_directly_desc"></p>
+				</div>
+				<div class="setting-control"><input type="checkbox" class="switch" id="auto_popup_show_menu_directly" /></div>
+			</div>
+
+			<div class="setting" id="auto_popup_relative_to_mouse_content">
+				<div class="setting-text">
+					<label class="setting-label" for="auto_popup_relative_to_mouse" data-i18n="auto_relative_to_mouse"></label>
+					<p class="setting-desc" data-i18n="auto_relative_to_mouse_desc"></p>
+				</div>
+				<div class="setting-control"><input type="checkbox" class="switch" id="auto_popup_relative_to_mouse" /></div>
+			</div>
+
+			<div class="setting">
+				<div class="setting-text">
+					<label class="setting-label" for="auto_popup_in_inputs" data-i18n="auto_in_inputs"></label>
+					<p class="setting-desc" data-i18n="auto_in_inputs_desc"></p>
+				</div>
+				<div class="setting-control"><input type="checkbox" class="switch" id="auto_popup_in_inputs" /></div>
+			</div>
+
+			<div class="setting">
+				<div class="setting-text">
+					<label class="setting-label" for="opt-auto-open-delay" data-i18n="auto_open_delay"></label>
+					<p class="setting-desc" data-i18n="ms_desc"></p>
+				</div>
+				<div class="setting-control">
+					<input id="opt-auto-open-delay" class="number-input" type="number" name="auto-open-delay" min="0" placeholder="0" />
+					<span class="unit">ms</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="activator_options" id="activator_k_and_m">
+			<h4 class="activator-title" data-i18n="activator_k_and_m"></h4>
+			<div class="setting">
+				<div class="setting-text">
+					<span class="setting-label" data-i18n="k_and_m_label"></span>
+					<p class="setting-desc" data-i18n="k_and_m_desc"></p>
+				</div>
+				<div class="setting-control">
+					<input type="text" id="k_and_m_keys" class="hotkey-definition-input text-input" />
+					<span class="unit">+</span>
+					<select id="k_and_m_button" class="select-input">
+						<option value="0" data-i18n="mouse_left"></option>
+						<option value="1" data-i18n="mouse_middle"></option>
+						<option value="2" data-i18n="mouse_right"></option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+
 
 	<div id="popup-advanced-options">
 
-	<h4 class="subsection-heading" id="head-styling">Styling</h4>
+	<div class="card">
+		<h3 class="card-title" id="head-styling" data-i18n="styling_heading"></h3>
 
-    <p id="select_theme_container"><select id="select_theme"></select> <input type="button" id="show_customize" value="Customize" /> &nbsp;&nbsp;<input type="checkbox" id="circular_menu"> <label for="circular_menu">Use circular menu (Experimental)</label></p>
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="select_theme" data-i18n="styling_theme"></label>
+				<p class="setting-desc" data-i18n="styling_theme_desc"></p>
+			</div>
+			<div class="setting-control" id="select_theme_container">
+				<select id="select_theme" class="select-input"></select>
+				<button type="button" class="btn" id="show_customize" data-i18n="styling_customize"></button>
+			</div>
+		</div>
 
-	<h4 class="subsection-heading">Preview</h4>
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="circular_menu" data-i18n="styling_circular"></label>
+				<p class="setting-desc" data-i18n="styling_circular_desc"></p>
+			</div>
+			<div class="setting-control"><input type="checkbox" class="switch" id="circular_menu" /></div>
+		</div>
 
-	<table id="preview-table">
-	<tr>
-		<td><div id="preview"></div></td>
-		<td valign="top"><div id="preview-button"></div></td>
-	</tr>
-	</table>
+		<h4 class="subheading" data-i18n="styling_preview"></h4>
+		<div class="preview-area">
+			<div id="preview"></div>
+			<div id="preview-button"></div>
+		</div>
 
+		<div id="customize">
+			<div class="help-box" id="style-info" data-i18n-html="styling_css_help"></div>
 
-	<div id="customize">
-		<div class="clearb"></div>
+			<pre id="html">
+&lt;ul class="popup mainmenu"&gt;
+    &lt;li&gt;&lt;input type="text" value="Selected Text" /&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Search engine name&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+    &lt;li class="engine-separator"&gt;&lt;/li&gt;
+    ...
+    &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Sub menu name&lt;/span&gt;&lt;/a&gt;
+        &lt;ul class="popup submenu"&gt;
+            &lt;li&gt;&lt;input type="text" value="Selected Text" /&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Search engine name&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+            &lt;li class="engine-separator"&gt;&lt;/li&gt;
+            ...
+        &lt;/ul&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;
 
-		<p class="info" id="style-info">Here you can customize the look of the menu with <a href="http://www.w3schools.com/css/default.asp">Cascading Style Sheets</a>.<br /><br />
-
-		You can also use special properties (unique to Selection Search) that change the way your menu or auto-button behaves.
-		These special properties are to be added to your CSS data as comments in between the keywords "CONFIG_START" and "CONFIG_END".
-		(See the CSS of the "Icons only" styling preset for an example configuration.)<br /><br />
-
-		These special properties are as follows:
-		<span style="padding-top: 12px; padding-left: 50px; display:block"><strong>submenu_corner, submenu_position:</strong><br />
-		Define where the submenu is placed at whenever it is opened from the main popup menu.
-		The property <b>submenu_position</b> defines the corner of the submenu button (of the main menu) that the submenu is placed at, and <b>submenu_corner</b> defines the exact corner of the submenu to place at <b>submenu_position.</b>
-		Valid values of these properties are "topright", "topleft", "bottomright", and "bottomleft".<br /><br />
-
-
-		<strong>menu_edge_right, menu_edge_bottom, menu_edge_left, menu_edge_top:</strong><br />
-
-		Define how the menu should be repositioned if it falls outside of the browser window.
-		If one of these properties has a value of "auto", then the menu is automatically repositioned to fit inside the window and to be flush with the window edge that it crossed.
-		If one of these properties has an integer value such as "10px", then the menu is moved that amount in pixels in the corresponding direction, without any automatic repositioning done beforehand.
-		This makes it possible to prevent the menu from covering the selection whenever the selection is next to one of the window's edges.<br /><br />
-		<strong>button_edge_right, button_edge_bottom, button_edge_left, button_edge_top:</strong><br />
-		Define how the auto button (when using the Auto activator) is repositioned if it falls outside of the browser window.
-		The possible values are the same as in the above <b>menu_edge_*</b> properties, and their effect is similar.</span></p>
-
-		<pre id="html">
-    &lt;ul class="popup mainmenu"&gt;
-        &lt;li&gt;&lt;input type="text" value="Selected Text" /&gt;&lt;/li&gt;
-        &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Search engine name&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
-        &lt;li class="engine-separator"&gt;&lt;/li&gt;
-        ...
-        &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Sub menu name&lt;/span&gt;&lt;/a&gt;
-            &lt;ul class="popup submenu"&gt;
-                &lt;li&gt;&lt;input type="text" value="Selected Text" /&gt;&lt;/li&gt;
-                &lt;li&gt;&lt;a href="#"&gt;&lt;img class="engine-img" src="#" /&gt;&lt;span class="engine-name"&gt;Search engine name&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
-                &lt;li class="engine-separator"&gt;&lt;/li&gt;
-                ...
-            &lt;/ul&gt;
-        &lt;/li&gt;
-    &lt;/ul&gt;
-
-    &lt;div class="button"&gt;&lt;/div&gt;
-		</pre>
-
-		<textarea id="style"></textarea>
-		<p class="buttons"><input id="update-preview" type="button" value="Update Preview" /> <input type="button" id="show_html" value="Show HTML" /></p>
-
-
-	</div>
-
-
-	<div class="clearb"></div>
-
-
-	<h4 class="subsection-heading" id="head-remove-icons">Remove Icons:</h4>
-
-	<div class="subsection">
-		<p class="section-option"><label for="remove-icons-no">Always show icons:</label><input id="remove-icons-no" name="remove_icons" type="radio" value="no" /> &nbsp;<label for="remove-icons-all">Always remove icons:</label><input id="remove-icons-all" type="radio" name="remove_icons" value="all" /></p>
-
-	</div>
-<!-- 	<br /> -->
-	<h4 class="subsection-heading" id="head-show-in-input">Show in inputs and textareas:</h4>
-
-	<div class="subsection">
-		<p class="info">
-		Enable this if you want to be able to select some text in an input or textarea and do a search.
-		To show the popup you first have to select some text and then hold <strong>CTRL</strong> and click inside the input or textarea.
-		When you use the auto activator you click with the left button, with the mouse activator you use the button you have chosen in the options.
-		</p>
-		<p class="section-option"><label for="opt-show-in-inputs">Show in inputs and textareas:</label> <input id="opt-show-in-inputs" type="checkbox" name="show_in_inputs" /></p>
-
-	</div>
-
-	<h4 class="subsection-heading" id="head-hide-on-click">Close popup after click:</h4>
-	<div class="subsection">
-		<p class="info">
-		Enable this if you want the popup to close after you click a search engine.
-		</p>
-		<p class="section-option"><label for="opt-hide-on-click">Close popup after click:</label> <input id="opt-hide-on-click" type="checkbox" name="hide-on-click" /></p>
-
-	</div>
-
-
-	<h4 class="subsection-heading" id="head-show-on-double-click">Open on double click:</h4>
-	<div class="subsection">
-		<p class="info">
-		Enable this if you want the popup to open when you double click to select a word.
-		</p>
-		<p class="section-option">
-			<label for="opt-open-on-dblclick">Open on double click:</label> <input id="opt-open-on-dblclick" type="checkbox" name="open-on-dblclick" />
-			&nbsp;&nbsp;
-			<label for="opt-dblclick-in-inputs">Enabled in inputs/textareas:</label> <input id="opt-dblclick-in-inputs" type="checkbox" name="dblclick-in-inputs" />
-		</p>
-
-	</div>
-
-	<h4 class="subsection-heading" id="head-disable-effects">Disable effects:</h4>
-	<div class="subsection">
-		<p class="info">
-		Enable this if you want to disable javascript effects. E.g. fading in/out effect when the popup appears.
-		This has no effect on CSS-effects added using custom styling.
-		</p>
-		<p class="section-option"><label for="opt-disable-effects">Disable effects:</label> <input id="opt-disable-effects" type="checkbox" name="disable-effects" /></p>
-
-	</div>
-
-	<h4 class="subsection-heading" id="head-show-tooltips">Show tooltips</h4>
-	<div class="subsection">
-		<p class="info">
-        Enable this if you want a tooltip with the search engine name to be shown when hovering the mouse
-        over the search engines in the popup.
-		</p>
-		<p class="section-option"><label for="opt-show-tooltips">Show tooltips</label> <input id="opt-show-tooltips" type="checkbox" name="show-tooltips" /></p>
-
-	</div>
-
-	<h4 class="subsection-heading" id="head-selection-length-limit">Selection length limit</h4>
-	<div class="subsection">
-		<p class="info">
-			You can set the maximum length of the selection that will activate the search popup.
-			If the selection is longer than this limit the popup will not open.
-		</p>
-		<p class="section-option">
-			<label for="opt-selection-length-limit">Selection length limit</label>
-			 <input id="opt-selection-length-limit" placeholder="No limit" type="number" name="selection-length-limit" min="0" />
-		</p>
-	</div>
-
-
-	<h4 class="subsection-heading" id="head-auto-hide-delay">Auto hide popup</h4>
-	<div class="subsection">
-		<p class="info">
-			If you set the auto hide delay to a positive number above 0 the popup will automatically be hidden
-			if you do not move the mouse over the popup. This also affects the "button" shown when using the auto activator.
-			The value is in milliseconds so if you enter 3000 the popup will hide after 3 seconds.
-		</p>
-		<p class="section-option">
-			<label for="opt-auto-hide-delay">Auto hide Delay</label>
-			 <input id="opt-auto-hide-delay" placeholder="0 = no auto hide" type="number" name="auto-hide-delay" min="0" /> (0 = no auto hide, in milliseconds 1000 = 1 second)
-		</p>
-		<p class="section-option">
-			<label for="opt-hide-on-scroll">Hide popup on window scroll</label> <input id="opt-hide-on-scroll" type="checkbox" name="hide-on-scroll" /> (Also hides the auto activator popup button)
-		</p>
-	</div>
-
-
-	<h4 class="subsection-heading" id="head-blacklist">Blacklist / Whitelist</h4>
-	<div class="subsection">
-		<p class="info">
-        The blacklist can be used to disable the popup on specific sites. [<a href="#" id="show-blacklist-info">Show Definition Syntax</a>]
-		</p>
-        <div class="info blacklist-info">
-        To block specific sites you define rules using the following syntax:
-        <pre>
-// This will remove the popup from www.example.com and all pages on this domain
-www.example.com
-
-// This will remove the popup from mail.example.com and all pages on this domain
-mail.example.com
-
-// This will remove the popup from all subdomains on example.com. Eg www.example.com, mail.example.com, ...
-example.com
-
-// This will remove the popup from pages starting with /test on www.example.com
-www.example.com/test
-
-// Each rule must be defined on its own line. Do not include "http://" in the rules.
+&lt;div class="button"&gt;&lt;/div&gt;
 </pre>
-        </div>
 
-		<p class="section-option"><label for="opt-use-whitelist">Use as whitelist</label>
-			<input id="opt-use-whitelist" type="checkbox" name="use-whitelist" />
-			<span class="separate-menus-msg">(When enabled the list will be used as a whitelist, i.e the popup will only load on matched sites. The list must be non-empty for this option to take effect.)</span>
+			<textarea id="style" class="code-input" spellcheck="false"></textarea>
+			<p class="button-row">
+				<button type="button" class="btn" id="update-preview" data-i18n="styling_update_preview"></button>
+				<button type="button" class="btn" id="show_html" data-i18n="styling_show_html"></button>
+			</p>
+		</div>
+	</div>
+
+
+	<div class="card">
+		<h3 class="card-title" data-i18n="display_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<span class="setting-label" data-i18n="remove_icons_label"></span>
+			</div>
+			<div class="setting-control segmented">
+				<input id="remove-icons-no" name="remove_icons" type="radio" value="no" /><label for="remove-icons-no" data-i18n="remove_icons_no"></label>
+				<input id="remove-icons-all" name="remove_icons" type="radio" value="all" /><label for="remove-icons-all" data-i18n="remove_icons_all"></label>
+			</div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-show-tooltips" data-i18n="opt_show_tooltips"></label>
+				<p class="setting-desc" data-i18n="opt_show_tooltips_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-show-tooltips" class="switch" type="checkbox" name="show-tooltips" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-disable-effects" data-i18n="opt_disable_effects"></label>
+				<p class="setting-desc" data-i18n="opt_disable_effects_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-disable-effects" class="switch" type="checkbox" name="disable-effects" /></div>
+		</div>
+	</div>
+
+
+	<div class="card">
+		<h3 class="card-title" data-i18n="behavior_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-show-in-inputs" data-i18n="opt_show_in_inputs"></label>
+				<p class="setting-desc" data-i18n="opt_show_in_inputs_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-show-in-inputs" class="switch" type="checkbox" name="show_in_inputs" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-hide-on-click" data-i18n="opt_hide_on_click"></label>
+				<p class="setting-desc" data-i18n="opt_hide_on_click_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-hide-on-click" class="switch" type="checkbox" name="hide-on-click" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-open-on-dblclick" data-i18n="opt_open_on_dblclick"></label>
+				<p class="setting-desc" data-i18n="opt_open_on_dblclick_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-open-on-dblclick" class="switch" type="checkbox" name="open-on-dblclick" /></div>
+		</div>
+
+		<div class="setting nested">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-dblclick-in-inputs" data-i18n="opt_dblclick_in_inputs"></label>
+			</div>
+			<div class="setting-control"><input id="opt-dblclick-in-inputs" class="switch" type="checkbox" name="dblclick-in-inputs" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-selection-length-limit" data-i18n="opt_selection_length_limit"></label>
+				<p class="setting-desc" data-i18n="opt_selection_length_limit_desc"></p>
+			</div>
+			<div class="setting-control">
+				<input id="opt-selection-length-limit" class="number-input" type="number" name="selection-length-limit" min="0" data-i18n-placeholder="no_limit" />
+				<span class="unit" data-i18n="unit_chars"></span>
+			</div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-auto-hide-delay" data-i18n="opt_auto_hide_delay"></label>
+				<p class="setting-desc" data-i18n="opt_auto_hide_delay_desc"></p>
+			</div>
+			<div class="setting-control">
+				<input id="opt-auto-hide-delay" class="number-input" type="number" name="auto-hide-delay" min="0" placeholder="0" />
+				<span class="unit">ms</span>
+			</div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-hide-on-scroll" data-i18n="opt_hide_on_scroll"></label>
+				<p class="setting-desc" data-i18n="opt_hide_on_scroll_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-hide-on-scroll" class="switch" type="checkbox" name="hide-on-scroll" /></div>
+		</div>
+	</div>
+
+
+	<div class="card">
+		<h3 class="card-title" id="head-blacklist" data-i18n="blacklist_heading"></h3>
+
+		<p class="setting-desc">
+			<span data-i18n="blacklist_desc"></span>
+			<a href="#" id="show-blacklist-info" class="toggle-link" data-i18n="blacklist_show_syntax"></a>
 		</p>
-		<p class="section-option"><label for="opt-use-blacklist-for-hotkeys">Use for hotkeys</label>
-			<input id="opt-use-blacklist-for-hotkeys" type="checkbox" name="use-for-hotkeys" />
-			<span class="separate-menus-msg">(When enabled the blacklist/whitelist will also affect the search engine hotkeys)</span>
+
+		<div class="help-box blacklist-info">
+			<p data-i18n="blacklist_syntax_intro"></p>
+			<pre data-i18n="blacklist_syntax"></pre>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-use-whitelist" data-i18n="opt_use_whitelist"></label>
+				<p class="setting-desc" data-i18n="opt_use_whitelist_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-use-whitelist" class="switch" type="checkbox" name="use-whitelist" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-use-blacklist-for-hotkeys" data-i18n="opt_use_blacklist_for_hotkeys"></label>
+				<p class="setting-desc" data-i18n="opt_use_blacklist_for_hotkeys_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-use-blacklist-for-hotkeys" class="switch" type="checkbox" name="use-for-hotkeys" /></div>
+		</div>
+
+		<textarea id="blacklist-definitions" class="code-input" rows="8" spellcheck="false" data-i18n-placeholder="blacklist_placeholder"></textarea>
+	</div>
+
+	</div>
+
+</section>
+
+
+<!-- ===================================================== Context menu -->
+<section class="panel" id="panel-contextmenu">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_contextmenu"></h2>
+		<p data-i18n="contextmenu_intro"></p>
+	</header>
+
+	<div class="card">
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="contextmenu_option" data-i18n="contextmenu_enable"></label>
+				<p class="setting-desc" data-i18n="contextmenu_desc"></p>
+			</div>
+			<div class="setting-control"><input id="contextmenu_option" class="switch" type="checkbox" /></div>
+		</div>
+	</div>
+
+</section>
+
+
+<!-- ===================================================== Toolbar popup -->
+<section class="panel" id="panel-toolbar">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_toolbar"></h2>
+		<p data-i18n-html="toolbar_intro"></p>
+	</header>
+
+	<div class="card">
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="toolbar_popup_option" data-i18n="toolbar_enable"></label>
+				<p class="setting-desc" data-i18n="toolbar_enable_desc"></p>
+			</div>
+			<div class="setting-control"><input id="toolbar_popup_option" class="switch" type="checkbox" /></div>
+		</div>
+	</div>
+
+	<div id="toolbar_popup_active">
+
+	<div class="card">
+		<h3 class="card-title" id="head-toolbar-popup-style" data-i18n="toolbar_options_heading"></h3>
+
+		<div class="setting">
+			<div class="setting-text">
+				<span class="setting-label" data-i18n="toolbar_shortcut"></span>
+				<p class="setting-desc" data-i18n="toolbar_shortcut_desc"></p>
+			</div>
+			<div class="setting-control"><a href="#" class="btn" id="chrome-shortcut" data-i18n="toolbar_shortcut_button"></a></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-toolbar-popup-icons-only" data-i18n="toolbar_icons_only"></label>
+				<p class="setting-desc" data-i18n="toolbar_icons_only_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-toolbar-popup-icons-only" class="switch" type="checkbox" name="toolbar_icons_only" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-toolbar-popup-hotkeys" data-i18n="toolbar_hotkeys"></label>
+				<p class="setting-desc" data-i18n="toolbar_hotkeys_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-toolbar-popup-hotkeys" class="switch" type="checkbox" name="toolbar_hotkeys" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-toolbar-popup-suggestions" data-i18n="toolbar_suggestions"></label>
+				<p class="setting-desc" data-i18n="toolbar_suggestions_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-toolbar-popup-suggestions" class="switch" type="checkbox" name="toolbar_suggestions" /></div>
+		</div>
+
+		<p class="advanced-toolbar-opts-toggle"><a href="#" id="show-advanced-toolbar-opts" class="toggle-link" data-i18n="toolbar_css_toggle"></a></p>
+
+		<div id="toolbar-advanced-options">
+			<p class="setting-desc" data-i18n-html="toolbar_css_help"></p>
+			<textarea id="toolbarStyle" class="code-input" spellcheck="false"></textarea>
+		</div>
+	</div>
+
+	</div>
+
+</section>
+
+
+<!-- ===================================================== Sync -->
+<section class="panel" id="panel-sync">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_sync"></h2>
+		<p data-i18n="sync_intro"></p>
+	</header>
+
+	<div class="card">
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-sync-engines" data-i18n="sync_engines"></label>
+				<p class="setting-desc" data-i18n="sync_engines_desc"></p>
+			</div>
+			<div class="setting-control"><input id="opt-sync-engines" class="switch" type="checkbox" name="sync-engines" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-sync-settings" data-i18n="sync_settings"></label>
+			</div>
+			<div class="setting-control"><input id="opt-sync-settings" class="switch" type="checkbox" name="sync-settings" /></div>
+		</div>
+
+		<div class="setting">
+			<div class="setting-text">
+				<label class="setting-label" for="opt-sync-style" data-i18n="sync_style"></label>
+			</div>
+			<div class="setting-control"><input id="opt-sync-style" class="switch" type="checkbox" /></div>
+		</div>
+
+		<p class="callout warning" data-i18n="sync_warning"></p>
+	</div>
+
+</section>
+
+
+<!-- ===================================================== Backup -->
+<section class="panel" id="panel-backup">
+
+	<header class="panel-header">
+		<h2 data-i18n="nav_backup"></h2>
+		<p data-i18n="backup_intro"></p>
+	</header>
+
+	<div class="card" id="export-settings">
+		<h3 class="card-title" data-i18n="export_heading"></h3>
+		<p class="setting-desc" data-i18n="export_desc"></p>
+
+		<div class="check-list inline">
+			<label><input type="checkbox" id="export-search-engines" checked /> <span data-i18n="data_engines"></span></label>
+			<label><input type="checkbox" id="export-style" checked /> <span data-i18n="data_style"></span></label>
+			<label><input type="checkbox" id="export-options" checked /> <span data-i18n="data_options"></span></label>
+		</div>
+
+		<textarea rows="6" class="code-input" readonly spellcheck="false"></textarea>
+		<p class="button-row">
+			<button type="button" class="btn" id="export-copy" data-i18n="export_copy"></button>
 		</p>
-        <textarea id="blacklist-definitions" rows="8" placeholder="For example: www.example.com"></textarea>
-
 	</div>
 
-	</div>
+	<div class="card" id="import-settings">
+		<h3 class="card-title" data-i18n="import_heading"></h3>
+		<p class="setting-desc" data-i18n="import_desc"></p>
 
-</div>
+		<textarea rows="6" class="code-input" spellcheck="false"></textarea>
 
+		<div class="check-list">
+			<label><input type="checkbox" id="import-search-engines" /> <span data-i18n="data_engines"></span></label>
+			<div id="import-replace-engines-opt" class="check-list nested">
+				<label><input type="checkbox" id="import-replace-engines" /> <span data-i18n="import_replace_engines"></span></label>
+			</div>
+			<label><input type="checkbox" id="import-style" /> <span data-i18n="data_style"></span></label>
+			<label><input type="checkbox" id="import-options" /> <span data-i18n="data_options"></span></label>
+		</div>
 
-
-
-
-
-
-
-
-
-
-
-<h2 class="section-heading">Context Menu</h2>
-<div class="section">
-<select id="contextmenu_option"></select>
-
-<div id="contextmenu_active">
-	<p>The search engines will be shown in the context menu when you right click on the selected text.
-	This option has som limits, the icons will not be shown and you can only click on one menu item before the menu closes.</p>
-</div>
-
-</div>
-
-
-
-<h2 class="section-heading">Toolbar Popup</h2>
-<div class="section">
-<select id="toolbar_popup_option"></select>
-
-<div id="toolbar_popup_active">
-	<p>
-		The search engines will be shown when clicking the selection search icon <img src="/img/icon48.png" height="16" width="16"> in the upper right corner of the browser.
-		<i>You may have to open the dropdown menu in the upper right corner to show the icon if you have many extensions installed.</i>
-	</p>
-	<p>
-		If you want to assign a shortcut to the toolbar popup, you can add a shortcut using the browser's builtin shortcut feature.
-		<a href="" id="chrome-shortcut" target="_blank" rel="noopener noreferrer"><b>Add shortcut</b></a> (Find selection search in the list)
-	</p>
-
-	<h4 class="subsection-heading" id="head-toolbar-popup-style">Options</h4>
-
-	<p class="section-option"><label for="opt-toolbar-popup-icons-only">Icons only</label> <input id="opt-toolbar-popup-icons-only" type="checkbox" name="toolbar_icons_only" /> <span class="separate-menus-msg">(Hide search engine names in the toolbar popup)</span></span></p>
-
-	<p class="section-option"><label for="opt-toolbar-popup-hotkeys">Hotkeys enabled</label> <input id="opt-toolbar-popup-hotkeys" type="checkbox" name="toolbar_hotkeys" /> <span class="separate-menus-msg">(Whether the hotkeys works while the input box has focus depends on the "Show in inputs and textareas" setting in the advanced settings under "Popup Menu" section.)</span></p>
-
-	<p class="section-option"><label for="opt-toolbar-popup-suggestions">Suggestions enabled</label> <input id="opt-toolbar-popup-suggestions" type="checkbox" name="toolbar_suggestions" /> <span class="separate-menus-msg">(Show search suggestions when typing in the search input)</span></p>
-
-	<div class="advanced-toolbar-opts-toggle">
-		<a href="#" id="show-advanced-toolbar-opts">Advanced Settings</a>
-	</div>
-
-	<div id="toolbar-advanced-options">
-		<h4 class="subsection-heading">Styling</h4>
-		<p class="info" id="style-info">
-			Here you can customize the look of the toolbar popup using <a href="http://www.w3schools.com/css/default.asp">Cascading Style Sheets</a>.
-			Right click on the toolbar icon and select "inspect" to see and experiment with the html of the popup.
-			After adding some css rules and saving the changes the css should be applied the next time you open the toolbar popup.
+		<p class="button-row">
+			<button type="button" class="btn btn-primary" id="import-submit" data-i18n="import_submit"></button>
 		</p>
-		<textarea id="toolbarStyle"></textarea>
 	</div>
-</div>
 
-</div>
+	<div class="card danger-zone">
+		<h3 class="card-title" data-i18n="reset_heading"></h3>
+		<div class="setting">
+			<div class="setting-text">
+				<p class="setting-desc" data-i18n="reset_desc"></p>
+			</div>
+			<div class="setting-control"><button type="button" class="btn btn-danger" id="restore" data-i18n="reset_button"></button></div>
+		</div>
+	</div>
 
+</section>
 
-
-<h2 class="section-heading">Synchronization</h2>
-<div class="section">
-
-
-	<p class="info">When sync is enabled your search engines and settings will be synchronized between chrome browsers on different computers.
-	 Individual search engines can be excluded from sync in the wrench menu next to the search engines.</p>
-
-
-<p class="section-option"><label for="opt-sync-engines">Sync search engines </label><input id="opt-sync-engines" type="checkbox" name="sync-engines" /></p>
-
-<p class="section-option"><label for="opt-sync-settings">Sync settings </label><input id="opt-sync-settings" type="checkbox" name="sync-settings" /></p>
-
-
-<p class="section-option"><label for="opt-sync-style">Sync popup menu style</label><input id="opt-sync-style" type="checkbox" /></p>
-
-
-<p class="info warning">If you have multiple browsers with different settings and search engines you have to be careful when enabling the sync
-	options. Because the last browser that enables sync will overwrite the previous ones.</p>
-
-
-</div>
-
-
-
-<h2 class="section-heading">Other Options</h2>
-<div class="section">
-<p class="section-option"><label for="opt-newtab">Open search in new tab:</label><input id="opt-newtab" type="checkbox" name="newtab" /></p>
-
-<p class="section-option"><label for="opt-background-tab">Open search in background tab:</label><input id="opt-background-tab" type="checkbox" name="background_tab" /> <span class="separate-menus-msg">(only useful if "Open search in new tab" is checked above, or when opening multiple tabs at once from e.g. opening all searches in a folder)</span></p>
-
-<p class="section-option"><label for="opt-open-new-tab-last">Open new tabs in last position:</label><input id="opt-open-new-tab-last" type="checkbox" name="open_new_tab_last" /> <span class="separate-menus-msg">(Only affectes searches from the context menu, the popup uses chromes default beavior and will not be affected by this option. By default the new tab will open next to the current tab.)</span></p>
-
-
-<p class="section-option"><label for="opt-separate-engines">Separate search engines for Popup and Context Menu:</label><input id="opt-separate-engines" type="checkbox" /> &nbsp;<span id="wrap-edit-separate-engines">(Click the wrench next to the search engines to edit.)</span></p>
-
-<p class="section-option"><label for="opt-disable-extractform">Disable <strong style="font-size: 85%;">CTRL+ALT+click</strong> shortcut for adding search engines:</label><input id="opt-disable-extractform" type="checkbox" /> (It can sometimes be buggy so if you don't use it you can disable it.)</p>
-
-<p class="section-option"><label for="opt-sort-by-click">Sort engines by usage count</label><input id="opt-sort-by-click" type="checkbox" />(The engines will be sorted by usage count so that the most used search engines will be placed first in the menu.)</p>
-
-<p class="section-option"><label for="opt-selection-allow-newline">Allow newline / linebreak in selection</label><input id="opt-selection-allow-newline" type="checkbox" />
-		(Allow the inline popup and toolbar popup to open when the selection contains newline / linebreak characters.
-		<i>May sometimes cause the popup to open when it is not supposed to.</i>
-		Only affects the inline popup / toolbar popup.)
-</p>
-
-<p class="section-option"><label for="opt-allow-engines-without-selection">Allow engines without selection</label><input id="opt-allow-engines-without-selection" type="checkbox" name="allow-engines-without-selection" />
-		(Enable this option to allow the popup to be activated without selecting text first.
-		This is useful for using the extension as a link collection tool for quick navigation to frequently
-		used URLs. When enabled, ALL search engines will appear in popups and context menus even when no text
-		is selected. Engines with %s will search for an empty string; engines without %s will navigate directly.)
-</p>
-
-</div>
-
-
-
-
-
-
-
-<h2 class="section-heading" id="export-import">Export / Import settings: <a href="#" id="export-settings-link">export</a> / <a href="#" id="import-settings-link">import</a></h2>
-
-<div id="export-settings">
-
-	<p class="info">Copy the data from the textarea below and store it somewhere, it can later be imported to restore your settings. <br />
-		You need to save your settings before you export. Any changes that has not been saved will not be exported.</p>
-
-	<ul>
-		<li><strong>Include:</strong>
-			<ul>
-			<li><input type="checkbox" id="export-search-engines" checked /><label for="export-search-engines">Search engines</label></li>
-			<li><input type="checkbox" id="export-style" checked /><label for="export-style">Styling</label></li>
-			<li><input type="checkbox" id="export-options" checked /><label for="export-options">Other settings</label></li>
-			</ul>
-		</li>
-<!-- 		<li><label for="encode-output"><strong>Encode output</strong></label> <input id="encode-output" type="checkbox"></li> -->
-	</ul>
-	<textarea rows="8"></textarea>
-
-</div>
-
-<div id="import-settings">
-
-	<p class="info">Paste the data you have previously exported into the textarea below and select the options you want to import and click the import button.</p>
-	</p>
-
-	<ul>
-		<li><strong>Import:</strong>
-			<ul>
-			<li><input type="checkbox" id="import-search-engines" /><label for="import-search-engines">Search engines</label>
-				<ul id="import-replace-engines-opt">
-					<li><input type="checkbox" id="import-replace-engines" /> <label for="import-replace-engines">Replace existing search engines</label></li>
-				</ul>
-			</li>
-			<li><input type="checkbox" id="import-style" /><label for="import-style">Styling</label></li>
-			<li><input type="checkbox" id="import-options" /><label for="import-options">Other settings</label></li>
-			<li><input type="button" id="import-submit" value="Import" /></li>
-			</ul>
-		</li>
-<!-- 		<li><label for="encode-output"><strong>Encode output</strong></label> <input id="encode-output" type="checkbox"></li> -->
-	</ul>
-	<textarea rows="8"></textarea>
-</div>
-
-<!-- <h2 class="section-heading">Save</h2> -->
 
 <div class="save-restore-buttons-wrapper">
 	<div class="save-restore-buttons">
+		<span class="save-status">
+			<span class="status-clean" data-i18n="status_no_changes"></span>
+			<span class="status-changed" data-i18n="status_unsaved"></span>
+			<span class="status-saved" data-i18n="status_saved"></span>
+		</span>
 		<p class="buttons" id="save-buttons">
-			<input type="button" id="save" value="Save" />
-			<input type="button" id="cancel" value="Cancel" />
-			<input type="button" id="restore" value="Restore defaults" />
+			<button type="button" class="btn" id="cancel" data-i18n="cancel_changes"></button>
+			<button type="button" class="btn btn-primary" id="save" data-i18n="save" data-i18n-title="save_shortcut"></button>
 		</p>
 	</div>
 </div>
 
+</main>
 
-
-
-<div class="clearb"></div>
 </div>
+
+
+<div id="hotkey_info" data-i18n="hotkey_info"></div>
 
 
 

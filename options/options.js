@@ -1,22 +1,12 @@
 
 
 var ACTIVATORS = {
-	'disabled' : 'Disabled',
-	'click' : 'Mouse Click',
-	'auto' :  'Auto',
+	'disabled' : i18n('activator_disabled'),
+	'click' : i18n('activator_click'),
+	'auto' :  i18n('activator_auto'),
 // 	'contextmenu' : 'Context Menu',
-	'k_and_m' : 'Keyboard shortcut + Mouse click',
-	'combo' :  'Multiple Activators',
-}
-
-var CONTEXTMENU_OPTIONS = {
-	'disabled' : 'Disabled',
-	'enabled' :  'Enabled'
-}
-
-var TOOLBAR_POPUP_OPTIONS = {
-	'disabled' : 'Disabled',
-	'enabled' :  'Enabled'
+	'k_and_m' : i18n('activator_k_and_m'),
+	'combo' :  i18n('activator_combo'),
 }
 
 var _G_folder_id_count = 0;
@@ -31,7 +21,7 @@ function emptySeparator(){
 }
 
 function emptySubmenu(){
-	return {name:'New Submenu', url:'', icon_url:'', is_submenu:true}
+	return {name:i18n('new_submenu_name'), url:'', icon_url:'', is_submenu:true}
 }
 
 function addNewEngine(en, level, add_at_position){
@@ -49,6 +39,7 @@ function addNewEngine(en, level, add_at_position){
 
 
     var el = $(render.searchengine(template_data));
+	applyI18n(el[0]);
 
 	Reorder.makeMovable(el);
 
@@ -90,6 +81,7 @@ function addNewEngine(en, level, add_at_position){
 function _addSeparator(template_data, level, add_at_position){
 
     var el = $(render.separator(template_data));
+	applyI18n(el[0]);
 
 	el.data('level', level);
 
@@ -315,7 +307,7 @@ function initOptionsPage(){
 
 		if(response.extra_style){
 			CURRENT_STYLE=response.extra_style;
-			$('#select_theme').prepend('<option selected="selected" value="current_style">&lt;Current Style&gt;</option>');
+			$('#select_theme').prepend($('<option selected="selected" value="current_style"></option>').text(i18n('current_style')));
 		}
 
 
@@ -341,11 +333,9 @@ function initOptionsPage(){
 
 
 
-		$("#contextmenu_option option[value='"+response.options.context_menu+"']").attr('selected', true);
-		$("#contextmenu_option").change();
+		$("#contextmenu_option").attr('checked', response.options.context_menu === 'enabled');
 
-		$("#toolbar_popup_option option[value='"+response.options.toolbar_popup+"']").attr('selected', true);
-		$("#toolbar_popup_option").change();
+		$("#toolbar_popup_option").attr('checked', response.options.toolbar_popup === 'enabled').change();
 		$("#opt-toolbar-popup-icons-only").attr('checked', response.options.toolbar_popup_style === 'icons-only');
 		$("#opt-toolbar-popup-hotkeys").attr('checked', response.options.toolbar_popup_hotkeys);
 		$("#opt-toolbar-popup-suggestions").attr('checked', response.options.toolbar_popup_suggestions);
@@ -390,6 +380,7 @@ function initOptionsPage(){
             $("#combo_"+act).attr("checked", true);
 
         }
+        _updateActivatorOptions();
 
 
         // Add search engines
@@ -444,10 +435,7 @@ function initOptionsPage(){
 
     $("#circular_menu").change(function(){
 
-        var ok = confirm("This will overwrite any custom styling. "+
-                "If you want to keep your styling you have to cancel and take a backup"+
-                " of the style before you proceed."+
-                "The options page will be saved and reloaded if you click ok.");
+        var ok = confirm(i18n('confirm_circular_menu'));
 
         if(!ok){
             $(this).attr('checked', !$(this).is(":checked"));
@@ -622,8 +610,8 @@ function initOptionsPage(){
 			remove_icons:$('input[name=remove_icons]:checked').val(),
 			show_in_inputs: $('input[name=show_in_inputs]').is(':checked'),
 			k_and_m_combo:k_and_m_combo,
-			context_menu: $('#contextmenu_option option:selected').first().attr('value'),
-			toolbar_popup: $('#toolbar_popup_option option:selected').first().attr('value'),
+			context_menu: $('#contextmenu_option').is(':checked') ? 'enabled' : 'disabled',
+			toolbar_popup: $('#toolbar_popup_option').is(':checked') ? 'enabled' : 'disabled',
 			toolbar_popup_style: $('#opt-toolbar-popup-icons-only').is(':checked') ? 'icons-only' : 'default',
 			toolbar_popup_hotkeys: $('#opt-toolbar-popup-hotkeys').is(':checked'),
 			toolbar_popup_suggestions: $('#opt-toolbar-popup-suggestions').is(':checked'),
@@ -669,20 +657,37 @@ function initOptionsPage(){
 
 	}
 
+	var _savedStatusTimeout = null;
+
 	$('#save').click(function(){
 		saveCurrentSettingsToStore(Storage);
 		chrome.runtime.sendMessage({action:"storageUpdated"});
 		$(document).trigger('settings-saved');
+
+		// Briefly show that the settings were saved
+		$('.save-restore-buttons').addClass('just-saved');
+		clearTimeout(_savedStatusTimeout);
+		_savedStatusTimeout = setTimeout(function(){
+			$('.save-restore-buttons').removeClass('just-saved');
+		}, 2500);
 	});
 
 	$('#cancel').click(function(){
 		location.reload();
 	})
 
+	// Ctrl+S / Cmd+S saves the settings
+	$(document).on('keydown', function(e){
+		if((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's'){
+			e.preventDefault();
+			$('#save').click();
+		}
+	});
+
 
 	$('#restore').click(function(){
 
-		if(confirm("This will delete all your search engines and reset all the changes you have made")){
+		if(confirm(i18n('confirm_restore'))){
 
 			Storage.clear();
 			location.reload();
@@ -701,7 +706,8 @@ function initOptionsPage(){
 
     if(!Storage.getOptions().circular_menu){
         $('.theme_def').each(function(){
-            theme_select.append('<option value="' + $(this).attr('id')+'">'+$(this).attr('name')+'</option>');
+            // The theme names are translated using the id of the theme definition as key
+            theme_select.append($('<option></option>').val($(this).attr('id')).text(i18n($(this).attr('id'))));
         });
     }
 
@@ -732,20 +738,26 @@ function initOptionsPage(){
 		$('#select_activator').append('<option value="' + act + '">'+name+'</option>');
 	}
 
-	$('#select_activator').change(function(){
+	// Shows the options for the selected activator. When multiple activators are
+	// used, the options for each of the checked activators are also shown.
+	function _updateActivatorOptions(){
 
-		var opt = $('#select_activator option:selected').first();
+		var val = $('#select_activator option:selected').first().attr('value');
+		var visible = [val];
 
-		var val = opt.attr('value');
-		if(val == 'disabled')
-			$('#show-advanced-popup-opts').hide();
-		else
-			$('#show-advanced-popup-opts').show();
+		if(val == 'combo'){
+			visible = visible.concat($('input[name=activator_combo]:checked').map(function(){
+				return $(this).val();
+			}).get());
+		}
 
-		$('.activator_options').hide(100);
-		$('#activator_' + opt.attr('value')).show(100);
+		$('.activator_options').each(function(){
+			$(this).toggle(visible.indexOf(this.id.replace('activator_', '')) !== -1);
+		});
+	}
 
-	});
+	$('#select_activator').change(_updateActivatorOptions);
+	$('input[name=activator_combo]').change(_updateActivatorOptions);
 
 
 	// Hide the option to position the button under the mouse if the option
@@ -762,38 +774,9 @@ function initOptionsPage(){
 
 
 
-	for (var act in CONTEXTMENU_OPTIONS){
-		var name = CONTEXTMENU_OPTIONS[act];
-		$('#contextmenu_option').append('<option value="' + act + '">'+name+'</option>');
-	}
-
-	for (var act in TOOLBAR_POPUP_OPTIONS){
-		var name = TOOLBAR_POPUP_OPTIONS[act];
-		$('#toolbar_popup_option').append('<option value="' + act + '">'+name+'</option>');
-	}
-
-
-	$('#contextmenu_option').change(function(){
-
-		var opt = $('#contextmenu_option option:selected').first();
-
-		var val = opt.attr('value');
-		if(val == 'disabled')
-			$('#contextmenu_active').hide(100);
-		else
-			$('#contextmenu_active').show(100);
-
-	});
-
 	$('#toolbar_popup_option').change(function(){
 
-		var opt = $('#toolbar_popup_option option:selected').first();
-
-		var val = opt.attr('value');
-		if(val == 'disabled')
-			$('#toolbar_popup_active').hide(100);
-		else
-			$('#toolbar_popup_active').show(100);
+		$('#toolbar_popup_active').toggle($(this).is(':checked'));
 
 	});
 
@@ -898,7 +881,7 @@ function initOptionsPage(){
 		var to_import = $('#import-settings textarea').val();
 
 		if(to_import.length == 0){
-			alert('No data to import');
+			alert(i18n('import_no_data'));
 			return;
 		}
 
@@ -922,7 +905,7 @@ function initOptionsPage(){
 			to_import = null;
 		}
 		if(!to_import || jQuery.isEmptyObject(to_import)){
-			alert('Failed to import data');
+			alert(i18n('import_failed'));
 			return;
 		}
 
@@ -930,7 +913,7 @@ function initOptionsPage(){
 		if( !$('#import-search-engines').is(':checked') &&
 			!$('#import-style').is(':checked') &&
 			!$('#import-options').is(':checked')){
-			alert('No data imported');
+			alert(i18n('import_nothing_selected'));
 			return;
 		}
 
@@ -939,10 +922,10 @@ function initOptionsPage(){
 		if($('#import-search-engines').is(':checked')){
 
 			if(!to_import.hasOwnProperty('searchEngines'))
-				msg.push('Search Engines: not available');
+				msg.push(i18n('import_engines_missing'));
 			else{
 
-				msg.push('Search Engines: OK');
+				msg.push(i18n('import_engines_ok'));
 
 				if($('#import-replace-engines').is(':checked')){
 					Storage.setSearchEngines(to_import.searchEngines);
@@ -956,9 +939,9 @@ function initOptionsPage(){
 		if($('#import-style').is(':checked')){
 
 			if(!to_import.hasOwnProperty('styleSheet') && !to_import.hasOwnProperty("toolbarStyleSheet"))
-				msg.push('Styling: not available');
+				msg.push(i18n('import_style_missing'));
 			else{
-				msg.push('Styling: OK');
+				msg.push(i18n('import_style_ok'));
 				if(to_import.hasOwnProperty('styleSheet')){
 					Storage.setStyle(to_import.styleSheet);
 				}
@@ -972,14 +955,14 @@ function initOptionsPage(){
 		if($('#import-options').is(':checked')){
 
 			if(!to_import.hasOwnProperty('options'))
-				msg.push('Other settings: not available');
+				msg.push(i18n('import_options_missing'));
 			else{
-				msg.push('Other settings: OK');
+				msg.push(i18n('import_options_ok'));
 				Storage.setOptions(to_import.options);
 			}
 		}
 
-		alert('Settings has been imported.\n\n' + msg.join('\n'));
+		alert(i18n('import_done') + '\n\n' + msg.join('\n'));
 
 		chrome.runtime.sendMessage({action:"storageUpdated"});
 
@@ -988,31 +971,14 @@ function initOptionsPage(){
 	}
 
 
-	$('#export-settings-link').click(function(){
-
-		$(this).toggleClass('selected');
-
-		$('#import-settings').slideUp(200);
-
-		$('#import-settings-link').removeClass('selected');
-
-
-		$('#export-settings').slideToggle(200, function(){
-
-
-
-			if($('#export-settings').is(':visible')){
-				_load_export();
-			}
-
-		});
-
-		var destination = $("body").offset().top + $("body").height();
-		$("body").animate({ scrollTop: destination},200);
-
-		return false;
+	// The export only contains saved settings, so it is reloaded when the
+	// backup tab is shown and when the settings are saved.
+	_load_export();
+	$(document).on('tab-shown', function(e, tab){
+		if(tab == 'backup')
+			_load_export();
 	});
-
+	$(document).on('settings-saved', _load_export);
 
 	$('#export-settings input').change(function(){
 		_load_export();
@@ -1022,26 +988,12 @@ function initOptionsPage(){
 		this.select();
 	});
 
-
-	$('#import-settings-link').click(function(){
-
-		$(this).toggleClass('selected');
-
-
-		$('#export-settings').slideUp(200);
-
-
-		$('#export-settings-link').removeClass('selected');
-
-
-		$('#import-settings').slideToggle(200, function(){
-
-
-
+	$('#export-copy').click(function(){
+		var button = $(this);
+		navigator.clipboard.writeText($('#export-settings textarea').val()).then(function(){
+			button.text(i18n('export_copied'));
+			setTimeout(function(){ button.text(i18n('export_copy')); }, 2000);
 		});
-		var destination = $("body").offset().top + $("body").height();
-		$("body").animate({ scrollTop: destination},200);
-
 		return false;
 	});
 
@@ -1057,14 +1009,10 @@ function initOptionsPage(){
 
 	$('#import-submit').click(function(){
 
-		var msg = ['This will overwrite you existing settings'];
+		var replace_engines = $('#import-search-engines').is(':checked') && $('#import-replace-engines').is(':checked');
+		var msg = i18n(replace_engines ? 'confirm_import_replace_engines' : 'confirm_import');
 
-		if($('#import-replace-engines').is(':checked'))
-			msg.push('\nand your search engines');
-
-		msg.push('.\n\nAre you sure you want to continue?');
-
-		if(confirm(msg.join('')))
+		if(confirm(msg))
 			_do_import();
 
 	});
@@ -1077,7 +1025,7 @@ function initOptionsPage(){
 		if($(this).data('old-text')){
 			$(this).text($(this).data('old-text')).removeData('old-text');
 		}else{
-			$(this).data('old-text', $(this).text()).text('Hide');
+			$(this).data('old-text', $(this).text()).text(i18n('hide_variables'));
 		}
 
 
@@ -1087,12 +1035,6 @@ function initOptionsPage(){
 	});
 
 
-	$('#show-advanced-popup-opts').click(function(){
-
-		$('#popup-advanced-options').slideToggle();
-		return false;
-	});
-
 	$('#show-advanced-toolbar-opts').click(function(){
 
 		$('#toolbar-advanced-options').slideToggle();
@@ -1101,7 +1043,7 @@ function initOptionsPage(){
 
 
 
-	// Detect changes in settings and show floating save button if changes are detected
+	// Detect changes in settings and highlight the save bar if changes are detected
 	setTimeout(function(){
 
 		function checkForChanges(){
@@ -1112,7 +1054,6 @@ function initOptionsPage(){
 			} else {
 				$('.save-restore-buttons').removeClass('changed');
 			}
-			_update_save_button_state();
 		}
 
 		var _changeDetectTimeout = null;
@@ -1134,22 +1075,40 @@ function initOptionsPage(){
 
 	}, 500);
 
+}
 
-	function _update_save_button_state(){
-		if((window.innerHeight + window.scrollY) < (document.body.offsetHeight - 100)){
-			$('.save-restore-buttons').addClass('floating');
-		}else{
-			$('.save-restore-buttons').removeClass('floating');
-		}
+
+// The options page is split into tabs. The active tab is stored in the url
+// hash, so it is kept when the page is reloaded.
+function initTabs(){
+
+	var tabs = $('#nav a').map(function(){ return $(this).data('tab'); }).get();
+
+	function showTab(){
+		var tab = location.hash.replace('#tab-', '');
+		if(tabs.indexOf(tab) === -1)
+			tab = tabs[0];
+
+		$('#nav a').removeClass('active').filter('[data-tab="' + tab + '"]').addClass('active');
+		$('.panel').removeClass('active');
+		$('#panel-' + tab).addClass('active');
+		$('.dropdown-popup, #hotkey_info').hide();
+		window.scrollTo(0, 0);
+
+		$(document).trigger('tab-shown', [tab]);
 	}
 
-	$(window).on('scroll', _update_save_button_state);
-	_update_save_button_state();
-
+	$(window).on('hashchange', showTab);
+	showTab();
 }
 
 
 $(document).ready(function(){
+	applyI18n(document);
+	document.title = i18n('options_title');
+	$('#ext-version').text('v' + chrome.runtime.getManifest().version);
+	initTabs();
+
 	storageLocalSyncInit(Storage).then(values => {
 		initOptionsPage();
 	});

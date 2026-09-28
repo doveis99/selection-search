@@ -195,8 +195,8 @@ function IconLoader(){
                 chrome.notifications.create({
                     type: 'basic',
                     iconUrl: '/img/icon48.png',
-                    title: 'Failed to store search engine icon',
-                    message: 'Some search engine icons may not show properly. A restart of the browser may help to free up old data from memory. If not please report the issue.'
+                    title: i18n('notif_icon_store_failed_title'),
+                    message: i18n('notif_icon_store_failed')
                 });
             }
         }
