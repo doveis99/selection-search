@@ -372,6 +372,10 @@ function initOptionsPage(){
 		$("#opt-use-blacklist-for-hotkeys").attr('checked', response.options.use_blacklist_for_hotkeys);
 		$("#opt-allow-engines-without-selection").attr('checked', response.options.allow_engines_without_selection);
 
+		$("#opt-ai-chat-autosend").attr('checked', response.options.ai_chat_autosend).change();
+		$("#opt-ai-chat-gemini-temp-chat").attr('checked', response.options.ai_chat_gemini_temp_chat);
+		$("#opt-ai-chat-claude-incognito").attr('checked', response.options.ai_chat_claude_incognito);
+
 		$("#toolbarStyle").val(response.toolbar_style);
 
         // set activator combo
@@ -637,6 +641,9 @@ function initOptionsPage(){
 			hide_on_scroll: $('#opt-hide-on-scroll').is(':checked'),
 			use_blacklist_for_hotkeys: $('#opt-use-blacklist-for-hotkeys').is(':checked'),
 			allow_engines_without_selection: $('#opt-allow-engines-without-selection').is(':checked'),
+			ai_chat_autosend: $('#opt-ai-chat-autosend').is(':checked'),
+			ai_chat_gemini_temp_chat: $('#opt-ai-chat-gemini-temp-chat').is(':checked'),
+			ai_chat_claude_incognito: $('#opt-ai-chat-claude-incognito').is(':checked'),
 		});
 
 
@@ -834,6 +841,10 @@ function initOptionsPage(){
 
 	$('#opt-open-on-dblclick').change(function(){
 		$('#opt-dblclick-in-inputs').attr('disabled', !$(this).is(':checked'));
+	})
+
+	$('#opt-ai-chat-autosend').change(function(){
+		$('#opt-ai-chat-gemini-temp-chat, #opt-ai-chat-claude-incognito').attr('disabled', !$(this).is(':checked'));
 	})
 
 	function _load_export(){

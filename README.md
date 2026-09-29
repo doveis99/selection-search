@@ -10,6 +10,14 @@ and
 
 ## Changelog
 
+*0.9.10*
+- Automatically type and send queries passed in the url (`q`, `prompt` or `custom_query`) on Gemini
+  (`https://gemini.google.com/app?q=%s`) and Claude (`https://claude.ai/new?q=%s`). By default the
+  query is sent in Gemini's temporary chat / Claude's incognito mode and is not sent if that mode
+  can't be confirmed. Can be configured in the general options.
+- Korean localization and a redesigned options page.
+- Refreshed popup design and a larger editor for search urls.
+
 *0.9.9*
 - Add optional "Allow engines without selection" feature. When enabled, the popup can be activated
   without text selection, allowing the extension to be used as a link collection tool for quick

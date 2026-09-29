@@ -157,6 +157,14 @@
     "opt_allow_newline_desc": { "message": "Allow the popup and toolbar popup to open when the selection contains newline characters. May sometimes cause the popup to open when it is not supposed to." },
     "opt_disable_extractform": { "message": "Disable CTRL+ALT+click shortcut for adding search engines" },
     "opt_disable_extractform_desc": { "message": "It can sometimes be buggy, so if you don't use it you can disable it." },
+    "ai_chat_heading": { "message": "AI chat auto send (Gemini · Claude)" },
+    "opt_ai_chat_autosend": { "message": "Type and send queries automatically" },
+    "opt_ai_chat_autosend_desc": { "message": "Puts the q, prompt or custom_query value of a gemini.google.com or claude.ai/new url into the prompt box and sends it. The currently selected model is used; the model menu and the sidebar are not touched." },
+    "opt_ai_chat_gemini_temp_chat": { "message": "Gemini: send in a temporary chat" },
+    "opt_ai_chat_gemini_temp_chat_desc": { "message": "Switches to a temporary chat before sending. The query is not sent if the temporary chat can't be confirmed." },
+    "opt_ai_chat_claude_incognito": { "message": "Claude: send in incognito mode" },
+    "opt_ai_chat_claude_incognito_desc": { "message": "Reopens the page with incognito added to the url if it is missing, then sends. The query is not sent if incognito mode can't be confirmed." },
+    "ai_chat_tip": { "message": "<p><strong>Example search engine urls</strong></p><ul><li>Gemini: <code>https://gemini.google.com/app?q=%s</code></li><li>Claude: <code>https://claude.ai/new?incognito=true&amp;q=%s</code> — with <code>incognito=true</code> in the url the chat opens in incognito mode right away and does not need to be reopened.</li><li>Multi-line prompts can be written with the \"Edit the url in a larger editor\" button in the search engine list.</li></ul>" },
 
 
     "popup_intro": { "message": "The popup menu shown when you select text on a web page." },
@@ -350,5 +358,27 @@
     "search_failed_invalid_url": { "message": "Search failed. Invalid url." },
     "post_invalid_url": { "message": "Invalid url for a POST search. The url must contain “{POSTARGS}”" },
     "encoding_heading": { "message": "Encoding search values." },
-    "encoding_redirecting": { "message": "You will now be redirected to:" }
+    "encoding_redirecting": { "message": "You will now be redirected to:" },
+
+    "ai_chat_mode_gemini": { "message": "temporary chat" },
+    "ai_chat_mode_claude": { "message": "incognito mode" },
+    "ai_chat_sent": { "message": "The query was sent." },
+    "ai_chat_private_failed": {
+        "message": "Could not confirm the switch to $mode$. The query was not sent.",
+        "placeholders": { "mode": { "content": "$1" } }
+    },
+    "ai_chat_private_lost": {
+        "message": "Sending was stopped because $mode$ was turned off.",
+        "placeholders": { "mode": { "content": "$1" } }
+    },
+    "ai_chat_no_editor": {
+        "message": "Could not find the $site$ prompt box.",
+        "placeholders": { "site": { "content": "$1" } }
+    },
+    "ai_chat_insert_failed": {
+        "message": "Could not type the query into the $site$ prompt box.",
+        "placeholders": { "site": { "content": "$1" } }
+    },
+    "ai_chat_send_unconfirmed": { "message": "Could not confirm that the query was sent." },
+    "ai_chat_no_send_button": { "message": "Could not find an enabled send button." }
 }

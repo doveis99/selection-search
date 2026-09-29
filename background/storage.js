@@ -56,6 +56,10 @@ function DataStore(kwStore){
         use_whitelist: false, // If enabled, the blacklist will be used as a whitelist
         use_blacklist_for_hotkeys: true, // If enabled the blacklist will also affect the search engine hotkeys
         allow_engines_without_selection: false, // Allow the popup to be activated without text selection
+        // Type and send queries passed in the url on Gemini and Claude (sites/ai_chat.js)
+        ai_chat_autosend: true,
+        ai_chat_gemini_temp_chat: true,
+        ai_chat_claude_incognito: true,
     };
 
     var _blacklist = [];
