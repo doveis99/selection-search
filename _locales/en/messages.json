@@ -161,11 +161,20 @@
     "opt_ai_chat_autosend": { "message": "Type and send queries automatically" },
     "opt_ai_chat_autosend_desc": { "message": "Puts the q, prompt or custom_query value of a gemini.google.com or claude.ai/new url into the prompt box and sends it. The currently selected model is used; the model menu and the sidebar are not touched." },
     "opt_ai_chat_gemini_temp_chat": { "message": "Gemini: send in a temporary chat" },
-    "opt_ai_chat_gemini_temp_chat_desc": { "message": "Switches to a temporary chat before sending. The query is not sent if the temporary chat can't be confirmed." },
+    "opt_ai_chat_gemini_temp_chat_desc": { "message": "Switches to a temporary chat before sending. The query is not sent if the temporary chat can't be confirmed. Images sent with “Search by capturing an area” follow this setting too." },
     "opt_ai_chat_claude_incognito": { "message": "Claude: send in incognito mode" },
-    "opt_ai_chat_claude_incognito_desc": { "message": "Reopens the page with incognito added to the url if it is missing, then sends. The query is not sent if incognito mode can't be confirmed." },
+    "opt_ai_chat_claude_incognito_desc": { "message": "Reopens the page with incognito added to the url if it is missing, then sends. The query is not sent if incognito mode can't be confirmed. Images sent with “Search by capturing an area” follow this setting too." },
     "ai_chat_tip": { "message": "<p><strong>Example search engine urls</strong></p><ul><li>Gemini: <code>https://gemini.google.com/app?q=%s</code></li><li>Claude: <code>https://claude.ai/new?incognito=true&amp;q=%s</code> — with <code>incognito=true</code> in the url the chat opens in incognito mode right away and does not need to be reopened.</li><li>Multi-line prompts can be written with the \"Edit the url in a larger editor\" button in the search engine list.</li></ul>" },
 
+
+    "capture_heading": { "message": "Search by capturing an area (Google Lens · Gemini · Claude)" },
+    "opt_capture_context_menu": { "message": "Show in the context menu" },
+    "opt_capture_context_menu_desc": { "message": "Adds “Search by capturing an area” to the menu you get when right clicking a page, image or link (not when text is selected). It is shown even if the search engine context menu is disabled." },
+    "opt_capture_toolbar_button": { "message": "Show in the toolbar popup" },
+    "opt_capture_toolbar_button_desc": { "message": "Adds a capture button below the search engines of the toolbar popup." },
+    "opt_capture_question": { "message": "Default question" },
+    "opt_capture_question_desc": { "message": "Filled into the question box for Gemini and Claude. When the question is empty the image is only attached and you type the question yourself." },
+    "capture_tip": { "message": "<p><strong>How it works</strong></p><ul><li>Drag an area of the page, then choose Google Lens, Gemini or Claude. Press Esc to cancel.</li><li>Gemini and Claude get the image together with the question. It is sent automatically only if there is a question and “Type and send queries automatically” is on, otherwise the image is only attached. The temporary chat and incognito settings above apply as well.</li><li>The screenshot is sent to the service you choose.</li><li>It does not work on browser pages such as chrome:// or the Chrome Web Store.</li></ul>" },
 
     "popup_intro": { "message": "The popup menu shown when you select text on a web page." },
     "activator_heading": { "message": "Activation" },
@@ -380,5 +389,23 @@
         "placeholders": { "site": { "content": "$1" } }
     },
     "ai_chat_send_unconfirmed": { "message": "Could not confirm that the query was sent." },
-    "ai_chat_no_send_button": { "message": "Could not find an enabled send button." }
+    "ai_chat_no_send_button": { "message": "Could not find an enabled send button." },
+    "ai_chat_image_attached": { "message": "The image was attached. Type your question." },
+    "ai_chat_image_question_ready": { "message": "The image and the question are in place. Send it when you are ready." },
+    "ai_chat_attach_failed": {
+        "message": "Could not attach the image to $site$.",
+        "placeholders": { "site": { "content": "$1" } }
+    },
+    "ai_chat_task_expired": { "message": "The captured image is no longer available. Capture it again." },
+
+    "contextmenu_capture": { "message": "Search by capturing an area" },
+    "toolbar_capture": { "message": "Capture an area and search" },
+    "capture_hint": { "message": "Drag to select an area. Press Esc to cancel." },
+    "capture_question_placeholder": { "message": "Question (optional, sent with the image to Gemini / Claude)" },
+    "capture_cancel": { "message": "Cancel" },
+    "capture_error_unavailable": { "message": "Area capture is not available on this page." },
+    "capture_error_failed": { "message": "Could not capture the area." },
+    "capture_error_too_small": { "message": "The selected area is too small." },
+    "capture_lens_failed": { "message": "Could not put the image into Google Lens." },
+    "capture_copied_hint": { "message": "The image was copied to the clipboard, paste it with Ctrl+V." }
 }

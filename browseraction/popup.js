@@ -301,6 +301,19 @@ function openFirstSearch(){
     document.querySelector('.engine a').click();
 }
 
+// Starts the area capture on the tab the popup was opened on. Opening the popup
+// grants the activeTab permission for that tab, which the capture needs.
+document.querySelector('.capture-button').addEventListener('click', () => {
+    chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+        if(tabs.length == 1 && tabs[0].id != undefined){
+            chrome.runtime.sendMessage({action: 'startCapture', tabId: tabs[0].id}, () => {
+                BrowserSupport.hasLastError();
+                window.close();
+            });
+        }
+    });
+});
+
 // Cache options for use in hasQuery() and other functions
 let cachedOptions = null;
 
@@ -316,6 +329,10 @@ chrome.runtime.sendMessage({action:"getContentScriptData"}, function(response){
 
     // Cache options for use in hasQuery()
     cachedOptions = response.options;
+
+    if(response.options.capture_toolbar_button){
+        showElement(document.querySelector('.capture-row'));
+    }
 
     if(response.options.toolbar_popup_style === 'icons-only'){
         document.querySelector('.search-engines').classList.add('icons-only');

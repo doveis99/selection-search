@@ -4,6 +4,7 @@ function ContextMenu(options, _clickCounterCallback){
 
 
     let _rootItem = 'ss-context-menu-root'
+    let _captureItem = 'ss-context-menu-capture'
     let _options = options;
     let _idCounter = 0
     let _onClickCallbacks = {}
@@ -39,6 +40,8 @@ function ContextMenu(options, _clickCounterCallback){
                     _idCounter = 0;
                     _onClickCallbacks = {}
                     _addEngines(engines, _rootItem).then(() =>{
+                        return _addCaptureItem()
+                    }).then(() =>{
                         resolve()
                     })
                 })
@@ -59,7 +62,10 @@ function ContextMenu(options, _clickCounterCallback){
                 _removeRootItem().then(() => {
                     _idCounter = 0;
                     _onClickCallbacks = {}
-                    resolve()
+                    // The capture item does not depend on the search engines
+                    _addCaptureItem().then(() => {
+                        resolve()
+                    })
                 })
             })
         })
@@ -213,6 +219,32 @@ function ContextMenu(options, _clickCounterCallback){
                 )
             });
 
+        })
+    }
+
+
+    // The "search by capturing an area" item (background/capture.js). It is
+    // a separate top level item that is not shown for selected text, so the root
+    // item above stays the only one there and Chrome does not group them.
+    function _addCaptureItem(){
+        return new Promise((resolve, reject) => {
+            if(!_options.capture_context_menu){
+                resolve()
+                return
+            }
+
+            chrome.contextMenus.create({
+                'id': _captureItem,
+                'title' : i18n('contextmenu_capture'),
+                'contexts' : ['page', 'frame', 'link', 'image', 'video', 'audio', 'editable'],
+            }, function(){
+                // The menu is recreated on every change, a leftover item is not an error
+                void chrome.runtime.lastError;
+                _registerOnClick(_captureItem, function(info, tab){
+                    startCapture(tab)
+                })
+                resolve()
+            })
         })
     }
 

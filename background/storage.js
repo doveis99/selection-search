@@ -60,6 +60,10 @@ function DataStore(kwStore){
         ai_chat_autosend: true,
         ai_chat_gemini_temp_chat: true,
         ai_chat_claude_incognito: true,
+        // Search by capturing an area of the page (background/capture.js)
+        capture_context_menu: true,
+        capture_toolbar_button: true,
+        capture_question: '', // Default question for the AI chats, empty only attaches the image
     };
 
     var _blacklist = [];

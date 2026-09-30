@@ -386,6 +386,9 @@ label.setting-label{
 #k_and_m_keys{
 	width: 160px;
 }
+#opt-capture-question{
+	width: 260px;
+}
 
 .code-input{
 	display: block;

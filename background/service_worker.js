@@ -12,6 +12,7 @@ importScripts(
     "contextmenu.js",
     "actionutils.js",
     "background.js",
+    "capture.js",
     "click-counter.js",
     "blacklist.js",
     "init.js",

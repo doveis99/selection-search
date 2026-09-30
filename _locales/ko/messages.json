@@ -161,11 +161,20 @@
     "opt_ai_chat_autosend": { "message": "질의를 자동으로 입력하고 전송" },
     "opt_ai_chat_autosend_desc": { "message": "gemini.google.com 또는 claude.ai/new 주소의 q, prompt, custom_query 값을 입력창에 넣고 바로 전송합니다. 현재 선택된 모델을 그대로 사용하며, 모델 메뉴와 사이드바는 건드리지 않습니다." },
     "opt_ai_chat_gemini_temp_chat": { "message": "Gemini: 임시 채팅에서 전송" },
-    "opt_ai_chat_gemini_temp_chat_desc": { "message": "임시 채팅으로 전환한 뒤 전송합니다. 임시 채팅 전환을 확인하지 못하면 전송하지 않습니다." },
+    "opt_ai_chat_gemini_temp_chat_desc": { "message": "임시 채팅으로 전환한 뒤 전송합니다. 임시 채팅 전환을 확인하지 못하면 전송하지 않습니다. ‘영역 캡처로 검색’으로 보내는 이미지에도 이 설정이 적용됩니다." },
     "opt_ai_chat_claude_incognito": { "message": "Claude: 시크릿 모드에서 전송" },
-    "opt_ai_chat_claude_incognito_desc": { "message": "주소에 incognito가 없으면 추가해서 다시 연 뒤 전송합니다. 시크릿 모드를 확인하지 못하면 전송하지 않습니다." },
+    "opt_ai_chat_claude_incognito_desc": { "message": "주소에 incognito가 없으면 추가해서 다시 연 뒤 전송합니다. 시크릿 모드를 확인하지 못하면 전송하지 않습니다. ‘영역 캡처로 검색’으로 보내는 이미지에도 이 설정이 적용됩니다." },
     "ai_chat_tip": { "message": "<p><strong>검색 엔진 URL 예시</strong></p><ul><li>Gemini: <code>https://gemini.google.com/app?q=%s</code></li><li>Claude: <code>https://claude.ai/new?incognito=true&amp;q=%s</code> — 주소에 <code>incognito=true</code>를 넣어 두면 처음부터 시크릿 모드로 열려 다시 열 필요가 없습니다.</li><li>여러 줄 프롬프트는 검색 엔진 목록에서 ‘넓은 편집 창에서 URL 편집’ 버튼으로 작성할 수 있습니다.</li></ul>" },
 
+
+    "capture_heading": { "message": "영역 캡처로 검색 (Google Lens · Gemini · Claude)" },
+    "opt_capture_context_menu": { "message": "우클릭 메뉴에 표시" },
+    "opt_capture_context_menu_desc": { "message": "페이지, 이미지, 링크를 마우스 오른쪽 버튼으로 클릭했을 때 나타나는 메뉴에 ‘영역 캡처로 검색’을 추가합니다(텍스트를 선택한 상태에서는 나타나지 않습니다). 검색 엔진 우클릭 메뉴를 꺼 두어도 표시됩니다." },
+    "opt_capture_toolbar_button": { "message": "툴바 팝업에 표시" },
+    "opt_capture_toolbar_button_desc": { "message": "툴바 팝업의 검색 엔진 목록 아래에 캡처 버튼을 추가합니다." },
+    "opt_capture_question": { "message": "기본 질문" },
+    "opt_capture_question_desc": { "message": "Gemini와 Claude용 질문 입력란에 미리 채워 둘 문구입니다. 질문이 비어 있으면 이미지만 첨부하고, 질문은 직접 입력합니다." },
+    "capture_tip": { "message": "<p><strong>사용 방법</strong></p><ul><li>페이지에서 영역을 드래그한 뒤 Google Lens, Gemini, Claude 중 하나를 고릅니다. Esc를 누르면 취소됩니다.</li><li>Gemini와 Claude에는 이미지와 질문을 함께 보냅니다. 질문이 있고 위의 ‘질의를 자동으로 입력하고 전송’이 켜져 있을 때만 자동으로 전송하며, 그 외에는 이미지만 첨부합니다. 위의 임시 채팅·시크릿 모드 설정도 그대로 적용됩니다.</li><li>캡처한 화면은 선택한 서비스로 전송됩니다.</li><li>chrome:// 같은 브라우저 내부 페이지나 Chrome 웹 스토어에서는 사용할 수 없습니다.</li></ul>" },
 
     "popup_intro": { "message": "웹 페이지에서 텍스트를 선택했을 때 나타나는 팝업 메뉴를 설정합니다." },
     "activator_heading": { "message": "여는 방법" },
@@ -380,5 +389,23 @@
         "placeholders": { "site": { "content": "$1" } }
     },
     "ai_chat_send_unconfirmed": { "message": "질의 전송 결과를 확인하지 못했습니다." },
-    "ai_chat_no_send_button": { "message": "활성화된 전송 버튼을 찾지 못했습니다." }
+    "ai_chat_no_send_button": { "message": "활성화된 전송 버튼을 찾지 못했습니다." },
+    "ai_chat_image_attached": { "message": "이미지를 첨부했습니다. 질문을 입력하세요." },
+    "ai_chat_image_question_ready": { "message": "이미지와 질문을 입력해 두었습니다. 확인 후 전송하세요." },
+    "ai_chat_attach_failed": {
+        "message": "$site$에 이미지를 첨부하지 못했습니다.",
+        "placeholders": { "site": { "content": "$1" } }
+    },
+    "ai_chat_task_expired": { "message": "캡처한 이미지를 더 이상 사용할 수 없습니다. 다시 캡처해 주세요." },
+
+    "contextmenu_capture": { "message": "영역 캡처로 검색" },
+    "toolbar_capture": { "message": "영역 캡처로 검색" },
+    "capture_hint": { "message": "드래그해서 영역을 선택하세요. Esc를 누르면 취소됩니다." },
+    "capture_question_placeholder": { "message": "질문 (선택, Gemini / Claude에 이미지와 함께 전송)" },
+    "capture_cancel": { "message": "취소" },
+    "capture_error_unavailable": { "message": "이 페이지에서는 영역 캡처를 사용할 수 없습니다." },
+    "capture_error_failed": { "message": "영역을 캡처하지 못했습니다." },
+    "capture_error_too_small": { "message": "선택한 영역이 너무 작습니다." },
+    "capture_lens_failed": { "message": "Google Lens에 이미지를 넣지 못했습니다." },
+    "capture_copied_hint": { "message": "이미지를 클립보드에 복사했으니 Ctrl+V로 붙여넣으세요." }
 }

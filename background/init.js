@@ -83,6 +83,18 @@ function Background(_previousVersion) {
                 return copyToClipboard(request, sendResponse);
             case "openAllUrls":
                 return openAllUrls(request, sendResponse, sender.tab);
+            case "startCapture":
+                return startCaptureFromMessage(request, sendResponse);
+            case "getCaptureConfig":
+                return getCaptureConfig(sendResponse);
+            case "captureSubmit":
+                return captureSubmit(request, sender, sendResponse);
+            case "getCaptureTask":
+                return getCaptureTaskForSender(request, sender, sendResponse);
+            case "finishCaptureTask":
+                return finishCaptureTask(request, sender, sendResponse);
+            case "getLensTask":
+                return getLensTask(sender, sendResponse);
             case "getCurrentDomainIcon":
                 return getCurrentDomainIcon(_iconCollectionPopup, _iconLoader, sendResponse, sender.tab);
             case "getCurrentDomainIconToolbar":
@@ -148,7 +160,7 @@ function Background(_previousVersion) {
 
 function initBackground(){
 
-    let CURRENT_VERSION = '0.9.10';
+    let CURRENT_VERSION = '0.9.11';
 
     return storageLocalSyncInit(Storage).then(values => {
 

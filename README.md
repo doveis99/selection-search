@@ -10,6 +10,21 @@ and
 
 ## Changelog
 
+*0.9.11*
+- Search by capturing an area of the page. Choose "Search by capturing an area" in the context
+  menu (right click on the page, an image or a link) or use the button below the search engines in
+  the toolbar popup, drag an area and choose Google Lens, Gemini or Claude. Gemini and Claude get
+  the image together with an optional question. The question is only sent automatically if there
+  is one and "Type and send queries automatically" is on, otherwise the image is only attached.
+  The temporary chat / incognito options apply to the image too. If the image can't be attached
+  automatically it is copied to the clipboard, so it can be pasted with Ctrl+V.
+  The context menu item, the toolbar button and a default question can be set in the general options.
+- Adds the `activeTab` and `scripting` permissions, which the capture needs to show the selection and
+  to take the screenshot only when the menu item or the toolbar button is used. The minimum Chrome
+  version is now 112.
+- The temporary chat and incognito options are no longer disabled when the automatic sending of
+  queries is turned off, because they also apply to captured images.
+
 *0.9.10*
 - Automatically type and send queries passed in the url (`q`, `prompt` or `custom_query`) on Gemini
   (`https://gemini.google.com/app?q=%s`) and Claude (`https://claude.ai/new?q=%s`). By default the
