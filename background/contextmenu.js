@@ -5,6 +5,7 @@ function ContextMenu(options, _clickCounterCallback){
 
     let _rootItem = 'ss-context-menu-root'
     let _captureItem = 'ss-context-menu-capture'
+    let _imageItem = 'ss-context-menu-image'
     let _options = options;
     let _idCounter = 0
     let _onClickCallbacks = {}
@@ -42,6 +43,8 @@ function ContextMenu(options, _clickCounterCallback){
                     _addEngines(engines, _rootItem).then(() =>{
                         return _addCaptureItem()
                     }).then(() =>{
+                        return _addImageItem()
+                    }).then(() =>{
                         resolve()
                     })
                 })
@@ -62,8 +65,10 @@ function ContextMenu(options, _clickCounterCallback){
                 _removeRootItem().then(() => {
                     _idCounter = 0;
                     _onClickCallbacks = {}
-                    // The capture item does not depend on the search engines
+                    // The capture items do not depend on the search engines
                     _addCaptureItem().then(() => {
+                        return _addImageItem()
+                    }).then(() => {
                         resolve()
                     })
                 })
@@ -233,15 +238,44 @@ function ContextMenu(options, _clickCounterCallback){
                 return
             }
 
+            let contexts = ['page', 'frame', 'link', 'video', 'audio', 'editable']
+            // Images get their own item, the overlay can still select another area from there
+            if(!_options.capture_image_context_menu){
+                contexts.push('image')
+            }
+
             chrome.contextMenus.create({
                 'id': _captureItem,
                 'title' : i18n('contextmenu_capture'),
-                'contexts' : ['page', 'frame', 'link', 'image', 'video', 'audio', 'editable'],
+                'contexts' : contexts,
             }, function(){
                 // The menu is recreated on every change, a leftover item is not an error
                 void chrome.runtime.lastError;
                 _registerOnClick(_captureItem, function(info, tab){
                     startCapture(tab)
+                })
+                resolve()
+            })
+        })
+    }
+
+
+    // "Search this image": starts the capture overlay with the image selected
+    function _addImageItem(){
+        return new Promise((resolve, reject) => {
+            if(!_options.capture_image_context_menu){
+                resolve()
+                return
+            }
+
+            chrome.contextMenus.create({
+                'id': _imageItem,
+                'title' : i18n('contextmenu_image'),
+                'contexts' : ['image'],
+            }, function(){
+                void chrome.runtime.lastError;
+                _registerOnClick(_imageItem, function(info, tab){
+                    startImageCapture(info, tab)
                 })
                 resolve()
             })

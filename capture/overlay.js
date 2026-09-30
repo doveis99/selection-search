@@ -2,9 +2,14 @@
 // Area selection for "search by capturing an area".
 //
 // Injected on demand into the top frame of the active tab by background/capture.js.
-// The user drags an area and chooses where to search. The overlay only draws the
-// selection: it hides itself and reports the area, the background script takes the
-// screenshot afterwards, so the overlay never ends up in the image.
+// The user drags an area, or clicks an element of the page, and chooses where to
+// search. The overlay only draws the selection: it hides itself and reports the
+// area, the background script takes the screenshot afterwards, so the overlay never
+// ends up in the image.
+//
+// When an image is chosen (a clicked <img>, or the image of the "search this image"
+// menu item) its url is sent as well and the original image is used instead of the
+// screenshot if it can be loaded.
 //
 // This script does not use the globals of the other content scripts, they are not
 // available in tabs that were opened before the extension was updated.
@@ -19,6 +24,11 @@
     }
 
     const MIN_SIZE = 8;
+    // A press that moves further than this is a drag, otherwise it picks the element
+    const DRAG_THRESHOLD = 5;
+    // Images read by the page itself, bigger ones are left to the background script
+    const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+    const IMAGE_FETCH_TIMEOUT = 5000;
 
     // Used until the background script answers, or if it does not
     const FALLBACK_CONFIG = {
@@ -47,7 +57,8 @@
         }
         .hint {
             position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-            padding: 8px 16px; border-radius: 999px; pointer-events: none; white-space: nowrap;
+            padding: 8px 16px; border-radius: 999px; pointer-events: none;
+            max-width: calc(100vw - 32px); box-sizing: border-box; text-align: center;
             background: rgba(24, 24, 27, 0.92); color: #fff;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
@@ -56,6 +67,17 @@
             border: 2px solid #4f8cff;
             box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);
         }
+        .box.empty { border: 0; }
+        .hover {
+            position: fixed; box-sizing: border-box; pointer-events: none;
+            border: 2px dashed #4f8cff; background: rgba(79, 140, 255, 0.12);
+        }
+        .hover-label {
+            position: absolute; left: -2px; bottom: 100%; margin-bottom: 4px;
+            padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+            background: #4f8cff; color: #fff; font-size: 11px;
+        }
+        .hover.inside .hover-label { bottom: auto; top: 2px; left: 2px; margin: 0; }
         .bar {
             position: fixed; box-sizing: border-box; width: 380px; max-width: calc(100vw - 16px);
             display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px;
@@ -63,11 +85,18 @@
             background: rgba(24, 24, 27, 0.97); color: #fff;
             box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
         }
+        .bar.busy { cursor: progress; opacity: 0.7; }
+        .bar.busy .btn { pointer-events: none; }
+        .thumb {
+            flex: 0 0 auto; width: 44px; height: 44px; object-fit: cover; border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+        }
         .question {
             box-sizing: border-box; flex: 1 1 100%; min-width: 0; padding: 7px 10px;
             border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.25);
             background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; outline: none;
         }
+        .thumb:not([hidden]) + .question { flex: 1 1 200px; }
         .question::placeholder { color: rgba(255, 255, 255, 0.55); }
         .question:focus { border-color: #4f8cff; }
         .btn {
@@ -83,10 +112,19 @@
     let host = null;      // the element added to the page
     let ui = null;        // the elements inside the shadow root
     let config = FALLBACK_CONFIG;
+    let pressed = false;  // the pointer is down, it is not a drag yet
     let dragging = false;
-    let anchor = null;    // where the drag started
+    let anchor = null;    // where the press started
     let rect = null;      // the selected area, css pixels of the viewport
+    let imageUrl = '';    // the url of the selected image, empty for an area
     let sending = false;
+
+    // The element under the pointer. The wheel moves the highlight to the parents
+    // of the element and back, the elements it came from are kept in hoverPath.
+    let hoverBase = null; // the element that is really under the pointer
+    let hoverTarget = null;
+    let hoverPath = [];
+    let lastWheel = 0;
 
 
     function t(key, fallback){
@@ -118,6 +156,107 @@
     }
 
 
+    // ------------------------------------------------------------ Elements
+
+    // The topmost element of the page at a point, looking into open shadow roots
+    function elementAt(x, y){
+        let found = null;
+        let scope = document;
+
+        for(let depth = 0; depth < 10 && scope; depth++){
+            const next = scope.elementsFromPoint(x, y).find(function(node){
+                return node !== host && (scope === document || scope.contains(node));
+            });
+            if(!next || next === found)
+                break;
+            found = next;
+            scope = next.shadowRoot || null;
+        }
+
+        return found;
+    }
+
+    function parentOf(node){
+        if(node.parentElement)
+            return node.parentElement;
+        const root = node.getRootNode && node.getRootNode();
+        return root && root.host ? root.host : null;
+    }
+
+    // The part of the element inside the viewport, null if too little of it is visible
+    function visibleRect(node){
+        const box = node.getBoundingClientRect();
+        const x = Math.max(0, box.left);
+        const y = Math.max(0, box.top);
+        const right = Math.min(window.innerWidth, box.right);
+        const bottom = Math.min(window.innerHeight, box.bottom);
+
+        if(right - x < MIN_SIZE || bottom - y < MIN_SIZE)
+            return null;
+
+        return {x: x, y: y, width: right - x, height: bottom - y};
+    }
+
+    function sameRect(a, b){
+        return Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 &&
+            Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1;
+    }
+
+    // Tiny elements like icons in text are replaced by the first parent that is big enough
+    function pickable(node){
+        while(node && !visibleRect(node))
+            node = parentOf(node);
+        return node;
+    }
+
+    function isImageUrl(url){
+        return typeof url === 'string' && /^(https?:|data:image\/|blob:)/i.test(url);
+    }
+
+    // The url of the image an element shows, if the element is an image or only wraps one
+    function imageSourceOf(node){
+        let img = null;
+
+        if(node instanceof HTMLImageElement){
+            img = node;
+        }else{
+            const images = node.querySelectorAll ? node.querySelectorAll('img') : [];
+            if(images.length === 1){
+                const own = visibleRect(node);
+                const inner = visibleRect(images[0]);
+                if(own && inner && Math.abs(own.width - inner.width) <= 4 && Math.abs(own.height - inner.height) <= 4)
+                    img = images[0];
+            }
+        }
+
+        const url = img ? (img.currentSrc || img.src) : '';
+        return isImageUrl(url) ? url : '';
+    }
+
+    // The image of the context menu item. The largest visible one wins if the same
+    // url is used more than once.
+    function findImage(url){
+        let best = null;
+        let bestArea = 0;
+
+        Array.prototype.forEach.call(document.images, function(img){
+            if(img.currentSrc !== url && img.src !== url)
+                return;
+            const area = visibleRect(img);
+            if(area && area.width * area.height > bestArea){
+                best = img;
+                bestArea = area.width * area.height;
+            }
+        });
+
+        return best;
+    }
+
+    function tagLabel(node, area){
+        return node.tagName.toLowerCase() + ' · ' + Math.round(area.width) + ' × ' + Math.round(area.height);
+    }
+
+
     // ------------------------------------------------------------ UI
 
     function build(){
@@ -135,13 +274,18 @@
 
         ui = {};
         ui.layer = el('div', 'layer');
-        ui.hint = el('div', 'hint', t('capture_hint', 'Drag to select an area. Press Esc to cancel.'));
+        ui.hint = el('div', 'hint', t('capture_hint', 'Drag an area or click an element · Wheel: surrounding element · Esc: cancel'));
+        ui.hover = el('div', 'hover');
+        ui.hover.hidden = true;
+        ui.hoverLabel = el('div', 'hover-label');
+        ui.hover.appendChild(ui.hoverLabel);
         ui.box = el('div', 'box');
         ui.box.hidden = true;
         ui.bar = el('div', 'bar');
         ui.bar.hidden = true;
-        ui.layer.appendChild(ui.hint);
         ui.layer.appendChild(ui.box);
+        ui.layer.appendChild(ui.hover);
+        ui.layer.appendChild(ui.hint);
         ui.layer.appendChild(ui.bar);
         root.appendChild(ui.layer);
 
@@ -150,13 +294,17 @@
         ui.layer.addEventListener('pointerdown', onPointerDown);
         ui.layer.addEventListener('pointermove', onPointerMove);
         ui.layer.addEventListener('pointerup', onPointerUp);
-        ui.layer.addEventListener('pointercancel', onPointerUp);
+        ui.layer.addEventListener('pointercancel', onPointerCancel);
+        ui.layer.addEventListener('pointerleave', function(){
+            if(!pressed && !dragging)
+                clearHover();
+        });
         // Keep the page from starting a text selection or a drag under the overlay
         ui.layer.addEventListener('mousedown', function(ev){ if(!inBar(ev)) ev.preventDefault(); });
         ui.layer.addEventListener('selectstart', function(ev){ if(!inBar(ev)) ev.preventDefault(); });
         ui.layer.addEventListener('dragstart', function(ev){ ev.preventDefault(); });
         ui.layer.addEventListener('contextmenu', function(ev){ ev.preventDefault(); });
-        ui.layer.addEventListener('wheel', function(ev){ ev.preventDefault(); }, {passive: false});
+        ui.layer.addEventListener('wheel', onWheel, {passive: false});
 
         document.documentElement.appendChild(host);
     }
@@ -167,6 +315,13 @@
 
         while(ui.bar.firstChild)
             ui.bar.removeChild(ui.bar.firstChild);
+
+        // Shows the image when it is not highlighted on the page, e.g. in a frame
+        ui.thumb = el('img', 'thumb');
+        ui.thumb.alt = '';
+        ui.thumb.hidden = true;
+        ui.thumb.addEventListener('error', function(){ ui.thumb.hidden = true; });
+        ui.bar.appendChild(ui.thumb);
 
         ui.question = el('input', 'question');
         ui.question.type = 'text';
@@ -194,6 +349,26 @@
         cancelButton.type = 'button';
         cancelButton.addEventListener('click', cancel);
         ui.bar.appendChild(cancelButton);
+
+        updateThumb();
+    }
+
+    function updateThumb(){
+        if(imageUrl && !rect){
+            ui.thumb.src = imageUrl;
+            ui.thumb.hidden = false;
+        }else{
+            ui.thumb.hidden = true;
+            ui.thumb.removeAttribute('src');
+        }
+    }
+
+    function drawBox(area){
+        const style = ui.box.style;
+        style.left = area.x + 'px';
+        style.top = area.y + 'px';
+        style.width = area.width + 'px';
+        style.height = area.height + 'px';
     }
 
     function setRect(a, b){
@@ -203,12 +378,7 @@
             width: Math.abs(a.x - b.x),
             height: Math.abs(a.y - b.y)
         };
-
-        const style = ui.box.style;
-        style.left = rect.x + 'px';
-        style.top = rect.y + 'px';
-        style.width = rect.width + 'px';
-        style.height = rect.height + 'px';
+        drawBox(rect);
     }
 
     function placeBar(){
@@ -218,6 +388,13 @@
         const margin = 8;
         const width = ui.bar.offsetWidth;
         const height = ui.bar.offsetHeight;
+
+        // In the middle when the image is not on the page
+        if(!rect){
+            ui.bar.style.left = Math.max(margin, (window.innerWidth - width) / 2) + 'px';
+            ui.bar.style.top = Math.max(margin, (window.innerHeight - height) / 2) + 'px';
+            return;
+        }
 
         const left = Math.max(margin, Math.min(rect.x, window.innerWidth - width - margin));
 
@@ -234,14 +411,100 @@
         ui.bar.style.top = top + 'px';
     }
 
+    // Shows the bar for the current selection
+    function showSelection(){
+        clearHover();
+        ui.hint.hidden = true;
+        ui.box.hidden = false;
+        // Without an area the whole page is dimmed behind the bar
+        ui.box.classList.toggle('empty', !rect);
+        drawBox(rect || {x: window.innerWidth / 2, y: window.innerHeight / 2, width: 0, height: 0});
+        updateThumb();
+        placeBar();
+        ui.question.focus({preventScroll: true});
+    }
+
     function resetSelection(){
+        pressed = false;
         dragging = false;
         rect = null;
+        imageUrl = '';
         if(ui){
             ui.box.hidden = true;
             ui.bar.hidden = true;
             ui.hint.hidden = false;
+            clearHover();
         }
+    }
+
+
+    // ------------------------------------------------------------ Hover
+
+    function clearHover(){
+        hoverBase = null;
+        hoverTarget = null;
+        hoverPath = [];
+        if(ui)
+            ui.hover.hidden = true;
+    }
+
+    function drawHover(){
+        const area = hoverTarget && visibleRect(hoverTarget);
+        if(!area){
+            ui.hover.hidden = true;
+            return;
+        }
+
+        const style = ui.hover.style;
+        style.left = area.x + 'px';
+        style.top = area.y + 'px';
+        style.width = area.width + 'px';
+        style.height = area.height + 'px';
+        ui.hoverLabel.textContent = tagLabel(hoverTarget, area);
+        ui.hover.classList.toggle('inside', area.y < 24);
+        ui.hover.hidden = false;
+    }
+
+    function updateHover(p){
+        const base = elementAt(p.x, p.y);
+
+        // Keeps the level chosen with the wheel while the pointer stays on the same element
+        if(base === hoverBase && hoverTarget)
+            return;
+
+        hoverBase = base;
+        hoverTarget = base ? pickable(base) : null;
+        hoverPath = [];
+        drawHover();
+    }
+
+    function onWheel(ev){
+        ev.preventDefault();
+
+        if(pressed || dragging || sending || inBar(ev) || !hoverTarget || Math.abs(ev.deltaY) < 1)
+            return;
+
+        // Touchpads send many small events
+        const now = Date.now();
+        if(now - lastWheel < 120)
+            return;
+        lastWheel = now;
+
+        if(ev.deltaY < 0){
+            const current = visibleRect(hoverTarget);
+            let parent = parentOf(hoverTarget);
+            // Parents with the same size would not show any change
+            while(parent && parent !== document.documentElement && current && visibleRect(parent) && sameRect(visibleRect(parent), current))
+                parent = parentOf(parent);
+            if(parent && visibleRect(parent)){
+                hoverPath.push(hoverTarget);
+                hoverTarget = parent;
+            }
+        }else if(hoverPath.length){
+            hoverTarget = hoverPath.pop();
+        }
+
+        drawHover();
     }
 
 
@@ -253,13 +516,12 @@
 
         ev.preventDefault();
 
-        dragging = true;
+        pressed = true;
         anchor = point(ev);
-        setRect(anchor, anchor);
 
-        ui.bar.hidden = true;
-        ui.hint.hidden = true;
-        ui.box.hidden = false;
+        // A touch has no hover before it
+        if(ev.pointerType !== 'mouse')
+            updateHover(anchor);
 
         try{
             ui.layer.setPointerCapture(ev.pointerId);
@@ -267,27 +529,75 @@
     }
 
     function onPointerMove(ev){
-        if(dragging)
-            setRect(anchor, point(ev));
+        const p = point(ev);
+
+        if(pressed && !dragging && (Math.abs(p.x - anchor.x) > DRAG_THRESHOLD || Math.abs(p.y - anchor.y) > DRAG_THRESHOLD)){
+            // The press becomes a drag of a free area
+            dragging = true;
+            imageUrl = '';
+            clearHover();
+            ui.bar.hidden = true;
+            ui.hint.hidden = true;
+            ui.box.classList.remove('empty');
+            ui.box.hidden = false;
+        }
+
+        if(dragging){
+            setRect(anchor, p);
+            return;
+        }
+
+        if(!pressed && !sending){
+            if(inBar(ev))
+                clearHover();
+            else
+                updateHover(p);
+        }
     }
 
     function onPointerUp(ev){
-        if(!dragging)
+        if(!pressed)
             return;
-
-        dragging = false;
 
         try{
             ui.layer.releasePointerCapture(ev.pointerId);
         }catch(err){}
 
-        if(rect.width < MIN_SIZE || rect.height < MIN_SIZE){
-            resetSelection();
+        pressed = false;
+
+        if(dragging){
+            dragging = false;
+            if(rect.width < MIN_SIZE || rect.height < MIN_SIZE){
+                resetSelection();
+                return;
+            }
+            showSelection();
             return;
         }
 
-        placeBar();
-        ui.question.focus({preventScroll: true});
+        // A click selects the highlighted element
+        const p = point(ev);
+        if(elementAt(p.x, p.y) !== hoverBase)
+            updateHover(p);
+
+        if(hoverTarget)
+            selectElement(hoverTarget);
+    }
+
+    function onPointerCancel(){
+        if(dragging)
+            resetSelection();
+        pressed = false;
+        dragging = false;
+    }
+
+    function selectElement(node, url){
+        const area = visibleRect(node);
+        if(!area)
+            return;
+        rect = area;
+        imageUrl = url || imageSourceOf(node);
+        showSelection();
     }
 
     function onKeyDown(ev){
@@ -305,10 +615,16 @@
         }
     }
 
-    // The area is relative to the viewport, so it is dropped when the page scrolls
+    // The area is relative to the viewport, so it is dropped when the page scrolls.
+    // An image that is not on the page does not depend on it.
     function onScroll(ev){
-        if(!sending && ev.target === document)
-            resetSelection();
+        if(sending || ev.target !== document)
+            return;
+        if(imageUrl && !rect && !ui.bar.hidden){
+            clearHover();
+            return;
+        }
+        resetSelection();
     }
 
     function onResize(){
@@ -329,24 +645,80 @@
         });
     }
 
+    function blobToDataUrl(blob){
+        return new Promise(function(resolve, reject){
+            const reader = new FileReader();
+            reader.onload = function(){ resolve(reader.result); };
+            reader.onerror = function(){ reject(reader.error); };
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // Reads the image with the cookies of the page. Only same origin images are read
+    // here, the background script tries the others, which would log CORS errors on the page.
+    function readImageInPage(url){
+        if(!url)
+            return Promise.resolve('');
+        if(/^data:image\//i.test(url))
+            return Promise.resolve(url);
+
+        let sameOrigin = false;
+        try{
+            sameOrigin = new URL(url, location.href).origin === location.origin;
+        }catch(err){}
+        if(!sameOrigin)
+            return Promise.resolve('');
+
+        const controller = new AbortController();
+        const timer = setTimeout(function(){ controller.abort(); }, IMAGE_FETCH_TIMEOUT);
+
+        return fetch(url, {cache: 'force-cache', signal: controller.signal}).then(function(response){
+            if(!response.ok)
+                return '';
+            return response.blob().then(function(blob){
+                if(blob.size > MAX_IMAGE_BYTES || (blob.type && !/^image\//i.test(blob.type)))
+                    return '';
+                return blobToDataUrl(blob);
+            });
+        }).catch(function(){
+            return '';
+        }).finally(function(){
+            clearTimeout(timer);
+        });
+    }
+
     function submit(targetId){
-        if(!rect || sending)
+        if((!rect && !imageUrl) || sending)
             return;
 
         sending = true;
+        ui.bar.classList.add('busy');
+        // A new overlay may be started while the image is read
+        const own = host;
 
         const message = {
             action: 'captureSubmit',
             target: targetId,
             question: ui.question.value.trim(),
-            rect: {x: rect.x, y: rect.y, width: rect.width, height: rect.height},
-            viewport: {width: window.innerWidth, height: window.innerHeight}
+            rect: rect ? {x: rect.x, y: rect.y, width: rect.width, height: rect.height} : null,
+            viewport: {width: window.innerWidth, height: window.innerHeight},
+            // The background script can't read the blob urls of the page
+            imageUrl: /^blob:/i.test(imageUrl) ? '' : imageUrl,
+            imageData: ''
         };
 
-        // The overlay must not be part of the screenshot
-        host.style.setProperty('display', 'none', 'important');
+        readImageInPage(imageUrl).then(function(data){
+            message.imageData = data;
+            if(data)
+                message.imageUrl = '';
 
-        afterPaint().then(function(){
+            // The overlay must not be part of the screenshot
+            if(host === own)
+                host.style.setProperty('display', 'none', 'important');
+            return afterPaint();
+        }).then(function(){
+            if(host !== own)
+                return; // cancelled meanwhile
             try{
                 chrome.runtime.sendMessage(message, function(){
                     void chrome.runtime.lastError;
@@ -373,9 +745,14 @@
             host = null;
         }
         ui = null;
+        pressed = false;
         dragging = false;
         rect = null;
+        imageUrl = '';
         sending = false;
+        hoverBase = null;
+        hoverTarget = null;
+        hoverPath = [];
     }
 
     function start(){
@@ -400,14 +777,36 @@
 
                 config = response;
                 buildBar();
-                if(rect && !dragging)
+                // The image of the context menu item is selected before the settings arrive
+                if(!ui.bar.hidden){
                     placeBar();
+                    ui.question.focus({preventScroll: true});
+                }
             });
         }catch(err){
-            // The extension was reloaded or removed, the fallback is used
+            // The extension was reloaded or removed
         }
     }
 
-    window.__selectionSearchCapture = {start: start, cancel: cancel};
+    // Starts with the image of the "search this image" menu item selected. It is
+    // highlighted if it is found in this document, images in frames are only shown
+    // in the bar.
+    function pickImage(url){
+        if(!ui)
+            start();
+        if(!isImageUrl(url))
+            return;
+
+        const img = findImage(url);
+        if(img && visibleRect(img)){
+            selectElement(img, url);
+        }else{
+            rect = null;
+            imageUrl = url;
+            showSelection();
+        }
+    }
+
+    window.__selectionSearchCapture = {start: start, cancel: cancel, pickImage: pickImage};
     start();
 })();

@@ -10,9 +10,21 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'background', 'capture
 const ID_A = '11111111-1111-4111-8111-111111111111';
 const ID_B = '22222222-2222-4222-8222-222222222222';
 
+// A tiny stand-in for the image apis of the service worker. Blobs of the type
+// image/svg+xml can't be decoded, like in a real service worker.
+class FakeCanvas {
+    constructor(width, height) {this.width = width; this.height = height;}
+    getContext() {return {drawImage() {}, fillRect() {}};}
+    async convertToBlob({type}) {return new Blob(['canvas'], {type});}
+}
+
 function harness({options = {}, sessionFails = false} = {}) {
     const session = new Map();
-    const state = {notifications: [], injected: [], created: [], now: 1000000, sessionFails, executeFails: false};
+    const state = {
+        notifications: [], injected: [], created: [], fetched: [], now: 1000000, sessionFails, executeFails: false,
+        // Answers of fetch() for urls that are not data urls
+        remote: {}, captureFails: false,
+    };
     const sessionStorage = {
         async get(keys) {
             const result = {};
@@ -30,6 +42,18 @@ function harness({options = {}, sessionFails = false} = {}) {
     const context = vm.createContext({
         console: {log() {}, warn() {}},
         URL, btoa, Blob, structuredClone, Promise, Uint8Array, Object, Math, Array,
+        AbortController, setTimeout, clearTimeout, OffscreenCanvas: FakeCanvas,
+        async fetch(url, init) {
+            state.fetched.push({url, init});
+            if (url.startsWith('data:')) return {ok: true, blob: async () => new Blob(['screenshot'], {type: 'image/png'})};
+            const answer = state.remote[url];
+            if (!answer) throw new TypeError('Failed to fetch');
+            return {ok: answer.ok !== false, blob: async () => new Blob([answer.body], {type: answer.type})};
+        },
+        async createImageBitmap(blob) {
+            if (blob.type === 'image/svg+xml') throw new Error('The source image could not be decoded.');
+            return {width: 200, height: 100, close() {}};
+        },
         Date: class extends Date {static now() {return state.now;}},
         crypto: {randomUUID: () => ID_A},
         i18n: key => key,
@@ -46,6 +70,10 @@ function harness({options = {}, sessionFails = false} = {}) {
                 },
             },
             tabs: {
+                async captureVisibleTab() {
+                    if (state.captureFails) throw new Error('Cannot capture');
+                    return 'data:image/png;base64,AAAA';
+                },
                 async create(properties) {
                     state.created.push(properties);
                     return {id: 40 + state.created.length, ...properties};
@@ -58,7 +86,8 @@ function harness({options = {}, sessionFails = false} = {}) {
     const api = vm.runInContext(`({
         getCropArea, sanitizeCaptureRect, isCapturableUrl, buildTargetUrl, blobToDataUrl, startCapture,
         saveCaptureTask, getCaptureTask, deleteCaptureTask, purgeCaptureTasks, getCaptureTaskForSender,
-        finishCaptureTask, openCaptureTarget, getLensTask, CAPTURE_TASK_TTL
+        finishCaptureTask, openCaptureTarget, getLensTask, CAPTURE_TASK_TTL,
+        isImageSourceUrl, loadSourceImage, startImageCapture, processCaptureSubmit
     })`, context);
     return {...api, state, session};
 }
@@ -258,4 +287,119 @@ test('gemini and claude tabs open next to the opener and are not registered as l
     const lens = respond();
     await h.getLensTask({tab: {id: 41}}, lens);
     assert.equal(lens.box.value.task, null);
+});
+
+
+// The image of the stored task as text, the fakes put their name into it
+function storedImage(h) {
+    const key = [...h.session.keys()].find(name => name.startsWith('capture_task_') && name !== 'capture_task_index');
+    const stored = h.session.get(key);
+    return {task: stored, content: Buffer.from(stored.imageDataUrl.split(',')[1], 'base64').toString()};
+}
+
+const submitRequest = fields => ({
+    action: 'captureSubmit', target: 'gemini', question: '',
+    rect: {x: 10, y: 10, width: 100, height: 50}, viewport: {width: 800, height: 600},
+    imageUrl: '', imageData: '', ...fields,
+});
+const sender = {tab: {id: 3, index: 0, windowId: 1}};
+
+test('only http and image data urls are loaded by the background script', () => {
+    const h = harness();
+    assert.equal(h.isImageSourceUrl('https://cdn.example/a.jpg'), true);
+    assert.equal(h.isImageSourceUrl('http://example/a.png'), true);
+    assert.equal(h.isImageSourceUrl('data:image/webp;base64,AAAA'), true);
+    assert.equal(h.isImageSourceUrl('data:text/html;base64,AAAA'), false);
+    assert.equal(h.isImageSourceUrl('blob:https://example/1234'), false);
+    assert.equal(h.isImageSourceUrl('file:///C:/a.png'), false);
+    assert.equal(h.isImageSourceUrl('javascript:alert(1)'), false);
+    assert.equal(h.isImageSourceUrl(undefined), false);
+});
+
+test('"search this image" starts the overlay with the image selected', async () => {
+    const h = harness();
+    await h.startImageCapture({srcUrl: 'https://cdn.example/a.jpg'}, {id: 6, url: 'https://example.com/'});
+    assert.equal(h.state.injected.length, 2);
+    assert.deepEqual([...h.state.injected[0].files], ['capture/overlay.js']);
+    assert.deepEqual([...h.state.injected[1].args], ['https://cdn.example/a.jpg']);
+    assert.equal(h.state.injected[1].target.tabId, 6);
+
+    // An image the background script can't use still gets the overlay, without a selection
+    await h.startImageCapture({srcUrl: 'blob:https://example.com/1'}, {id: 7, url: 'https://example.com/'});
+    assert.equal(h.state.injected.length, 3);
+    assert.deepEqual([...h.state.injected[2].files], ['capture/overlay.js']);
+});
+
+test('the original image is used instead of the screenshot when it can be loaded', async () => {
+    const h = harness();
+    h.state.remote['https://cdn.example/a.jpg'] = {body: 'original', type: 'image/jpeg'};
+    await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a.jpg'}), sender);
+    const {task: stored, content} = storedImage(h);
+    assert.equal(content, 'original');
+    assert.equal(stored.mimeType, 'image/jpeg');
+    assert.equal(stored.filename, 'selection-search-capture.jpg');
+    const remote = h.state.fetched.find(request => request.url === 'https://cdn.example/a.jpg');
+    assert.equal(remote.init.credentials, 'omit');
+});
+
+test('images in other formats are converted to png', async () => {
+    const h = harness();
+    h.state.remote['https://cdn.example/a.webp'] = {body: 'webp', type: 'image/webp'};
+    await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a.webp'}), sender);
+    const {task: stored, content} = storedImage(h);
+    assert.equal(content, 'canvas');
+    assert.equal(stored.mimeType, 'image/png');
+});
+
+test('the image read by the page is preferred over its url', async () => {
+    const h = harness();
+    await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a.jpg', imageData: 'data:image/png;base64,AAAA'}), sender);
+    assert.equal(h.state.fetched.some(request => request.url === 'https://cdn.example/a.jpg'), false);
+    assert.equal(storedImage(h).content, 'screenshot');
+});
+
+test('the screenshot is used when the original image can not be loaded or decoded', async () => {
+    for (const remote of [undefined, {ok: false, body: 'x', type: 'image/png'}, {body: '<svg/>', type: 'image/svg+xml'}]) {
+        const h = harness();
+        if (remote) h.state.remote['https://cdn.example/a'] = remote;
+        await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a'}), sender);
+        const {task: stored, content} = storedImage(h);
+        // The crop of the screenshot
+        assert.equal(content, 'canvas');
+        assert.equal(stored.mimeType, 'image/png');
+    }
+});
+
+test('an image without an area needs the original image', async () => {
+    const h = harness();
+    h.state.remote['https://frame.example/a.png'] = {body: 'original', type: 'image/png'};
+    await h.processCaptureSubmit(submitRequest({rect: null, imageUrl: 'https://frame.example/a.png'}), sender);
+    assert.equal(storedImage(h).content, 'original');
+
+    const failing = harness();
+    await assert.rejects(failing.processCaptureSubmit(submitRequest({rect: null, imageUrl: 'https://frame.example/b.png'}), sender),
+        err => err.captureMessage === 'capture_error_image');
+    assert.equal(failing.state.created.length, 0);
+});
+
+test('a missing or tiny area without an image is rejected', async () => {
+    const h = harness();
+    await assert.rejects(h.processCaptureSubmit(submitRequest({rect: null}), sender), err => err.captureMessage === 'capture_error_failed');
+    await assert.rejects(h.processCaptureSubmit(submitRequest({rect: {x: 0, y: 0, width: 3, height: 3}}), sender),
+        err => err.captureMessage === 'capture_error_too_small');
+    // A url the background script must not load is ignored
+    await assert.rejects(h.processCaptureSubmit(submitRequest({rect: null, imageUrl: 'file:///C:/a.png'}), sender),
+        err => err.captureMessage === 'capture_error_failed');
+});
+
+test('a failing screenshot does not matter when the original image loads', async () => {
+    const h = harness();
+    h.state.captureFails = true;
+    h.state.remote['https://cdn.example/a.png'] = {body: 'original', type: 'image/png'};
+    await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a.png'}), sender);
+    assert.equal(storedImage(h).content, 'original');
+
+    const areaOnly = harness();
+    areaOnly.state.captureFails = true;
+    await assert.rejects(areaOnly.processCaptureSubmit(submitRequest({}), sender), err => err.captureMessage === 'capture_error_unavailable');
 });

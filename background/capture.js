@@ -6,9 +6,13 @@
 // and therefore grant the activeTab permission, so no host permissions are
 // needed for the injection and the screenshot.
 //
-// The overlay lets the user drag an area and choose a target, hides itself and
-// reports the area with a "captureSubmit" message. The visible tab is then
-// captured, cropped and handed to the target:
+// The "search this image" context menu item calls startImageCapture(), which
+// starts the same overlay with the image already selected.
+//
+// The overlay lets the user drag an area or click an element and choose a target,
+// hides itself and reports the area with a "captureSubmit" message. The visible
+// tab is then captured, cropped and handed to the target. For an image the
+// original is used instead of the screenshot when it can be loaded:
 //   lens   - capture/lens_upload.js puts the image into the upload box of Google Lens
 //   gemini - sites/ai_chat.js attaches the image to the prompt box and sends the
 //   claude   question if there is one
@@ -22,6 +26,9 @@ const CAPTURE_TASK_TTL = 30 * 60 * 1000;
 // The session storage is limited to 10 MB and the images are stored as base64
 const CAPTURE_MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const CAPTURE_MIN_SIZE = 8;
+// Original images that are downloaded and decoded, bigger ones use the screenshot
+const CAPTURE_MAX_SOURCE_BYTES = 30 * 1024 * 1024;
+const CAPTURE_IMAGE_TIMEOUT = 10000;
 
 const CAPTURE_TARGETS = {
     lens: {label: 'Google Lens', url: 'https://lens.google.com/'},
@@ -60,7 +67,8 @@ function showCaptureError(messageKey){
 
 // ---------------------------------------------------------------- Start
 
-async function startCapture(tab){
+// imageUrl is the image of the context menu item, the overlay starts with it selected
+async function startCapture(tab, imageUrl){
 
     if(!tab || tab.id == undefined || !isCapturableUrl(tab.url)){
         showCaptureError('capture_error_unavailable');
@@ -72,11 +80,27 @@ async function startCapture(tab){
             target: {tabId: tab.id},
             files: ['capture/overlay.js']
         });
+
+        if(imageUrl){
+            await chrome.scripting.executeScript({
+                target: {tabId: tab.id},
+                func: function(url){
+                    var capture = window.__selectionSearchCapture;
+                    if(capture)
+                        capture.pickImage(url);
+                },
+                args: [imageUrl]
+            });
+        }
     }catch(err){
         // chrome:// pages, the Chrome Web Store and other pages extensions can't access
         console.warn('SelectionSearch: could not start the area capture.', err);
         showCaptureError('capture_error_unavailable');
     }
+}
+
+function startImageCapture(info, tab){
+    return startCapture(tab, info && isImageSourceUrl(info.srcUrl) ? info.srcUrl : '');
 }
 
 // Used by the toolbar popup, which only knows the id of the active tab
@@ -170,6 +194,62 @@ async function cropCapturedImage(dataUrl, rect, viewport){
         return await canvas.convertToBlob({type: 'image/png'});
     }finally{
         bitmap.close();
+    }
+}
+
+// Urls of original images the background script may load. Blob urls belong to
+// the page and are read there.
+function isImageSourceUrl(url){
+    return typeof url === 'string' && /^(https?:\/\/|data:image\/)/i.test(url);
+}
+
+async function fetchImageSource(url){
+
+    if(/^data:/i.test(url))
+        return await (await fetch(url)).blob();
+
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, CAPTURE_IMAGE_TIMEOUT);
+
+    try{
+        // Without host permissions this only works for images that allow CORS
+        var response = await fetch(url, {credentials: 'omit', cache: 'force-cache', signal: controller.signal});
+        if(!response.ok)
+            return null;
+        return await response.blob();
+    }finally{
+        clearTimeout(timer);
+    }
+}
+
+// Returns the original image as png or jpeg, or null if it can't be loaded or
+// decoded (e.g. svg, which can't be drawn in a service worker).
+async function loadSourceImage(url){
+
+    if(!isImageSourceUrl(url))
+        return null;
+
+    try{
+        var blob = await fetchImageSource(url);
+        if(!blob || !blob.size || blob.size > CAPTURE_MAX_SOURCE_BYTES)
+            return null;
+
+        var bitmap = await createImageBitmap(blob);
+
+        try{
+            // These are accepted everywhere and are kept as they are
+            if(blob.type === 'image/png' || blob.type === 'image/jpeg')
+                return blob;
+
+            var canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+            canvas.getContext('2d').drawImage(bitmap, 0, 0);
+            return await canvas.convertToBlob({type: 'image/png'});
+        }finally{
+            bitmap.close();
+        }
+    }catch(err){
+        console.warn('SelectionSearch: could not load the original image, the screenshot is used.', err);
+        return null;
     }
 }
 
@@ -455,19 +535,32 @@ async function processCaptureSubmit(request, sender){
     if(!tab || !CAPTURE_TARGETS.hasOwnProperty(request.target))
         throw captureError('capture_error_failed');
 
-    var rect = sanitizeCaptureRect(request.rect, request.viewport);
-    if(!rect)
-        throw captureError('capture_error_too_small');
+    // An image in a frame has no area, only the image
+    var source = isImageSourceUrl(request.imageData) ? request.imageData :
+        isImageSourceUrl(request.imageUrl) ? request.imageUrl : '';
+    var rect = request.rect ? sanitizeCaptureRect(request.rect, request.viewport) : null;
 
-    var screenshot;
-    try{
-        screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, {format: 'png'});
-    }catch(err){
-        console.warn('SelectionSearch: could not capture the tab.', err);
-        throw captureError('capture_error_unavailable');
+    if(!rect && !source)
+        throw captureError(request.rect ? 'capture_error_too_small' : 'capture_error_failed');
+
+    // Taken first, the page may change while the original image is loaded
+    var screenshot = null;
+    if(rect){
+        try{
+            screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, {format: 'png'});
+        }catch(err){
+            console.warn('SelectionSearch: could not capture the tab.', err);
+            if(!source)
+                throw captureError('capture_error_unavailable');
+        }
     }
 
-    var blob = await cropCapturedImage(screenshot, rect, request.viewport);
+    var blob = source ? await loadSourceImage(source) : null;
+    if(!blob && screenshot)
+        blob = await cropCapturedImage(screenshot, rect, request.viewport);
+    if(!blob)
+        throw captureError('capture_error_image');
+
     var image = await encodeCapturedImage(blob);
 
     var question = typeof request.question === 'string' ? request.question.trim().slice(0, 4000) : '';

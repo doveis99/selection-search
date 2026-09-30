@@ -10,6 +10,16 @@ and
 
 ## Changelog
 
+*0.9.12*
+- "Search this image" in the context menu of images. It opens the capture with the image already
+  selected, so only the question and the target are left to choose. The original image is sent when
+  it can be loaded (same origin images, data urls and images that allow CORS), otherwise the part of
+  it that is visible on the screen. Images in frames are shown in the bar of the capture. It can be
+  turned off in the general options.
+- The capture can select elements of the page: move the mouse over the page and click the highlighted
+  element. The mouse wheel moves the highlight to the surrounding element and back. Dragging still
+  selects a free area. A clicked image is sent as the original image too.
+
 *0.9.11*
 - Search by capturing an area of the page. Choose "Search by capturing an area" in the context
   menu (right click on the page, an image or a link) or use the button below the search engines in

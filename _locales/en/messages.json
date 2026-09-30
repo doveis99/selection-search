@@ -167,14 +167,16 @@
     "ai_chat_tip": { "message": "<p><strong>Example search engine urls</strong></p><ul><li>Gemini: <code>https://gemini.google.com/app?q=%s</code></li><li>Claude: <code>https://claude.ai/new?incognito=true&amp;q=%s</code> — with <code>incognito=true</code> in the url the chat opens in incognito mode right away and does not need to be reopened.</li><li>Multi-line prompts can be written with the \"Edit the url in a larger editor\" button in the search engine list.</li></ul>" },
 
 
-    "capture_heading": { "message": "Search by capturing an area (Google Lens · Gemini · Claude)" },
+    "capture_heading": { "message": "Search by image or area (Google Lens · Gemini · Claude)" },
     "opt_capture_context_menu": { "message": "Show in the context menu" },
-    "opt_capture_context_menu_desc": { "message": "Adds “Search by capturing an area” to the menu you get when right clicking a page, image or link (not when text is selected). It is shown even if the search engine context menu is disabled." },
+    "opt_capture_context_menu_desc": { "message": "Adds “Search by capturing an area” to the menu you get when right clicking a page or link (not when text is selected). It is shown even if the search engine context menu is disabled." },
+    "opt_capture_image_context_menu": { "message": "“Search this image” when right clicking an image" },
+    "opt_capture_image_context_menu_desc": { "message": "Opens the capture with the image already selected, so you only type the question and choose where to search. The original image is sent when it can be loaded, otherwise the part of it that is visible on the screen." },
     "opt_capture_toolbar_button": { "message": "Show in the toolbar popup" },
     "opt_capture_toolbar_button_desc": { "message": "Adds a capture button below the search engines of the toolbar popup." },
     "opt_capture_question": { "message": "Default question" },
     "opt_capture_question_desc": { "message": "Filled into the question box for Gemini and Claude. When the question is empty the image is only attached and you type the question yourself." },
-    "capture_tip": { "message": "<p><strong>How it works</strong></p><ul><li>Drag an area of the page, then choose Google Lens, Gemini or Claude. Press Esc to cancel.</li><li>Gemini and Claude get the image together with the question. It is sent automatically only if there is a question and “Type and send queries automatically” is on, otherwise the image is only attached. The temporary chat and incognito settings above apply as well.</li><li>The screenshot is sent to the service you choose.</li><li>It does not work on browser pages such as chrome:// or the Chrome Web Store.</li></ul>" },
+    "capture_tip": { "message": "<p><strong>How it works</strong></p><ul><li>Drag an area of the page, or move the mouse over the page and click the highlighted element (an image, a post, a table…). The mouse wheel moves the highlight to the surrounding element and back. Then choose Google Lens, Gemini or Claude. Press Esc to cancel.</li><li>When an image is selected its original file is sent if it can be loaded, otherwise the part of it that is visible on the screen.</li><li>Gemini and Claude get the image together with the question. It is sent automatically only if there is a question and “Type and send queries automatically” is on, otherwise the image is only attached. The temporary chat and incognito settings above apply as well.</li><li>The screenshot is sent to the service you choose.</li><li>It does not work on browser pages such as chrome:// or the Chrome Web Store.</li></ul>" },
 
     "popup_intro": { "message": "The popup menu shown when you select text on a web page." },
     "activator_heading": { "message": "Activation" },
@@ -400,12 +402,14 @@
 
     "contextmenu_capture": { "message": "Search by capturing an area" },
     "toolbar_capture": { "message": "Capture an area and search" },
-    "capture_hint": { "message": "Drag to select an area. Press Esc to cancel." },
+    "contextmenu_image": { "message": "Search this image" },
+    "capture_hint": { "message": "Drag an area or click an element · Wheel: surrounding element · Esc: cancel" },
     "capture_question_placeholder": { "message": "Question (optional, sent with the image to Gemini / Claude)" },
     "capture_cancel": { "message": "Cancel" },
     "capture_error_unavailable": { "message": "Area capture is not available on this page." },
     "capture_error_failed": { "message": "Could not capture the area." },
     "capture_error_too_small": { "message": "The selected area is too small." },
+    "capture_error_image": { "message": "Could not load the image. Drag an area around it instead." },
     "capture_lens_failed": { "message": "Could not put the image into Google Lens." },
     "capture_copied_hint": { "message": "The image was copied to the clipboard, paste it with Ctrl+V." }
 }

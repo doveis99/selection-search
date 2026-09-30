@@ -377,6 +377,7 @@ function initOptionsPage(){
 		$("#opt-ai-chat-claude-incognito").attr('checked', response.options.ai_chat_claude_incognito);
 
 		$("#opt-capture-context-menu").attr('checked', response.options.capture_context_menu);
+		$("#opt-capture-image-context-menu").attr('checked', response.options.capture_image_context_menu);
 		$("#opt-capture-toolbar-button").attr('checked', response.options.capture_toolbar_button);
 		$("#opt-capture-question").val(response.options.capture_question);
 
@@ -649,6 +650,7 @@ function initOptionsPage(){
 			ai_chat_gemini_temp_chat: $('#opt-ai-chat-gemini-temp-chat').is(':checked'),
 			ai_chat_claude_incognito: $('#opt-ai-chat-claude-incognito').is(':checked'),
 			capture_context_menu: $('#opt-capture-context-menu').is(':checked'),
+			capture_image_context_menu: $('#opt-capture-image-context-menu').is(':checked'),
 			capture_toolbar_button: $('#opt-capture-toolbar-button').is(':checked'),
 			capture_question: $('#opt-capture-question').val().trim(),
 		});
