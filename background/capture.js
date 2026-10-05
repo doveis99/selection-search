@@ -17,7 +17,7 @@
 //   gemini - sites/ai_chat.js attaches the image to the prompt box and sends the
 //   claude   question if there is one
 // The image is kept in chrome.storage.session under a random task id until the
-// target page has taken it.
+// target page has taken it. It is also copied to the clipboard, if enabled.
 
 const CAPTURE_TASK_PREFIX = 'capture_task_';
 const CAPTURE_INDEX_KEY = 'capture_task_index';
@@ -309,6 +309,60 @@ async function encodeCapturedImage(blob){
 }
 
 
+// ---------------------------------------------------------------- Clipboard
+
+// The clipboard only takes png images
+async function convertToPng(blob){
+
+    if(blob.type === 'image/png')
+        return blob;
+
+    var bitmap = await createImageBitmap(blob);
+    try{
+        var canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+        canvas.getContext('2d').drawImage(bitmap, 0, 0);
+        return await canvas.convertToBlob({type: 'image/png'});
+    }finally{
+        bitmap.close();
+    }
+}
+
+// Runs in the page the capture was started on. The service worker and the
+// offscreen documents can't write images to the clipboard, a focused page can.
+async function writeImageToClipboard(dataUrl){
+    try{
+        var binary = atob(dataUrl.slice(dataUrl.indexOf(',') + 1));
+        var bytes = new Uint8Array(binary.length);
+        for(var i = 0; i < binary.length; i++){
+            bytes[i] = binary.charCodeAt(i);
+        }
+        var blob = new Blob([bytes], {type: 'image/png'});
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        return true;
+    }catch(err){
+        console.warn('SelectionSearch: could not copy the captured image to the clipboard.', err);
+        return false;
+    }
+}
+
+// Copies the image in full size, before it is made smaller for the storage. It
+// must be done before the target tab opens and takes the focus from the page.
+async function copyCapturedImage(blob, sender){
+    try{
+        var dataUrl = await blobToDataUrl(await convertToPng(blob));
+        var results = await chrome.scripting.executeScript({
+            target: {tabId: sender.tab.id, frameIds: [sender.frameId || 0]},
+            func: writeImageToClipboard,
+            args: [dataUrl]
+        });
+        return !!(results && results[0] && results[0].result);
+    }catch(err){
+        console.warn('SelectionSearch: could not copy the captured image to the clipboard.', err);
+        return false;
+    }
+}
+
+
 // ---------------------------------------------------------------- Tasks
 
 async function readCaptureIndex(){
@@ -560,6 +614,9 @@ async function processCaptureSubmit(request, sender){
         blob = await cropCapturedImage(screenshot, rect, request.viewport);
     if(!blob)
         throw captureError('capture_error_image');
+
+    if(Storage.getOptions().capture_copy_to_clipboard)
+        await copyCapturedImage(blob, sender);
 
     var image = await encodeCapturedImage(blob);
 

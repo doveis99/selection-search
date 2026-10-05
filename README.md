@@ -10,6 +10,10 @@ and
 
 ## Changelog
 
+*0.9.13*
+- The image of the area capture is copied to the clipboard as well, in full size, so it can be pasted
+  anywhere. It can be turned off in the general options.
+
 *0.9.12*
 - "Search this image" in the context menu of images. It opens the capture with the image already
   selected, so only the question and the target are left to choose. The original image is sent when

@@ -23,7 +23,7 @@ function harness({options = {}, sessionFails = false} = {}) {
     const state = {
         notifications: [], injected: [], created: [], fetched: [], now: 1000000, sessionFails, executeFails: false,
         // Answers of fetch() for urls that are not data urls
-        remote: {}, captureFails: false,
+        remote: {}, captureFails: false, clipboardFails: false, events: [],
     };
     const sessionStorage = {
         async get(keys) {
@@ -67,6 +67,8 @@ function harness({options = {}, sessionFails = false} = {}) {
                 async executeScript(details) {
                     if (state.executeFails) throw new Error('Cannot access a chrome:// URL');
                     state.injected.push(details);
+                    state.events.push('executeScript');
+                    if (details.func) return [{frameId: 0, result: !state.clipboardFails}];
                 },
             },
             tabs: {
@@ -76,6 +78,7 @@ function harness({options = {}, sessionFails = false} = {}) {
                 },
                 async create(properties) {
                     state.created.push(properties);
+                    state.events.push('create');
                     return {id: 40 + state.created.length, ...properties};
                 },
                 get(id, callback) {callback({id, url: 'https://example.com/'});},
@@ -402,4 +405,33 @@ test('a failing screenshot does not matter when the original image loads', async
     const areaOnly = harness();
     areaOnly.state.captureFails = true;
     await assert.rejects(areaOnly.processCaptureSubmit(submitRequest({}), sender), err => err.captureMessage === 'capture_error_unavailable');
+});
+
+
+test('the captured image is copied to the clipboard of the page before the target opens', async () => {
+    const h = harness({options: {capture_copy_to_clipboard: true}});
+    h.state.remote['https://cdn.example/a.webp'] = {body: 'webp', type: 'image/webp'};
+    await h.processCaptureSubmit(submitRequest({imageUrl: 'https://cdn.example/a.webp'}), {...sender, frameId: 0});
+    const copy = h.state.injected.find(details => details.func);
+    assert.equal(copy.func.name, 'writeImageToClipboard');
+    assert.equal(copy.target.tabId, 3);
+    assert.deepEqual([...copy.target.frameIds], [0]);
+    // Always png, the clipboard takes no other images
+    assert.match(copy.args[0], /^data:image\/png;base64,/);
+    assert.deepEqual(h.state.events, ['executeScript', 'create']);
+});
+
+test('the clipboard is left alone when the option is off and a failing copy does not stop the search', async () => {
+    const off = harness({options: {capture_copy_to_clipboard: false}});
+    await off.processCaptureSubmit(submitRequest({}), sender);
+    assert.equal(off.state.injected.length, 0);
+    assert.equal(off.state.created.length, 1);
+
+    for (const field of ['clipboardFails', 'executeFails']) {
+        const h = harness({options: {capture_copy_to_clipboard: true}});
+        h.state[field] = true;
+        await h.processCaptureSubmit(submitRequest({}), sender);
+        assert.equal(h.state.created.length, 1);
+        assert.equal(storedImage(h).content, 'canvas');
+    }
 });
