@@ -10,6 +10,14 @@ and
 
 ## Changelog
 
+*0.9.15*
+- The image and area searches (Google Lens, Gemini and Claude) follow the "Open search in new tab",
+  "Open search in background tab" and "Open new tabs in last position" options like the other
+  searches, instead of always opening a new tab. By default they now open in the current tab.
+- Fixed: the option of a search engine to negate "Open search in new tab" had no effect in the
+  context menu, the toolbar popup and the engine hotkeys, and opened the search in the current tab
+  from the popup when background tabs were enabled.
+
 *0.9.14*
 - The image is no longer copied to the clipboard on every capture. The capture bar has a "Copy"
   button instead (or Ctrl+C), which copies the selected area or image to the clipboard without

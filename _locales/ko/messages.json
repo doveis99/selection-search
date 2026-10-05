@@ -143,7 +143,7 @@
     "opt_background_tab": { "message": "백그라운드 탭에서 열기" },
     "opt_background_tab_desc": { "message": "‘새 탭에서 검색 결과 열기’가 켜져 있거나, 하위 메뉴의 검색을 한꺼번에 열 때 적용됩니다." },
     "opt_open_new_tab_last": { "message": "새 탭을 탭 목록 맨 끝에 열기" },
-    "opt_open_new_tab_last_desc": { "message": "우클릭 메뉴에서 연 검색에만 적용됩니다. 팝업 메뉴는 브라우저 기본 동작을 따르며, 기본적으로 새 탭은 현재 탭 바로 옆에 열립니다." },
+    "opt_open_new_tab_last_desc": { "message": "우클릭 메뉴에서 연 검색과 이미지·영역 검색에만 적용됩니다. 팝업 메뉴는 브라우저 기본 동작을 따르며, 기본적으로 새 탭은 현재 탭 바로 옆에 열립니다." },
     "pwa_tip": { "message": "<p><strong>설치된 PWA 앱(YouTube 등)에서 검색 결과를 열려면</strong></p><ul><li>‘새 탭에서 검색 결과 열기’를 켜고 ‘백그라운드 탭에서 열기’를 끄세요.</li><li>엔진별 옵션의 ‘새 창’, ‘시크릿 창’, ‘새 탭에서 열기 반대로 적용’은 꺼져 있어야 합니다.</li><li>웹 페이지의 팝업 메뉴에서 연 검색에만 적용됩니다. 우클릭 메뉴와 툴바 팝업은 항상 브라우저 탭으로 엽니다.</li><li>크롬의 앱 설정(chrome://apps에서 앱을 마우스 오른쪽 버튼으로 클릭)에서 ‘지원되는 링크 열기’가 켜져 있어야 합니다.</li></ul>" },
     "general_menu_heading": { "message": "메뉴 공통" },
     "opt_allow_without_selection": { "message": "선택 없이 엔진 사용" },

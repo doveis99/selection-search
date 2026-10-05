@@ -21,7 +21,7 @@ class FakeCanvas {
 function harness({options = {}, sessionFails = false} = {}) {
     const session = new Map();
     const state = {
-        notifications: [], injected: [], created: [], fetched: [], now: 1000000, sessionFails, executeFails: false,
+        notifications: [], injected: [], created: [], updated: [], fetched: [], now: 1000000, sessionFails, executeFails: false,
         // Answers of fetch() for urls that are not data urls
         remote: {}, captureFails: false, clipboardFails: false,
     };
@@ -78,6 +78,10 @@ function harness({options = {}, sessionFails = false} = {}) {
                 async create(properties) {
                     state.created.push(properties);
                     return {id: 40 + state.created.length, ...properties};
+                },
+                async update(id, properties) {
+                    state.updated.push({id, ...properties});
+                    return {id, ...properties};
                 },
                 get(id, callback) {callback({id, url: 'https://example.com/'});},
             },
@@ -250,8 +254,11 @@ test('finishing a task removes the image', async () => {
     assert.equal(await h.getCaptureTask(ID_A), null);
 });
 
+// Searches open in the current tab unless new tabs are enabled
+const NEW_TAB = {newtab: true, background_tab: false};
+
 test('the lens page finds its image by the id of its tab', async () => {
-    const h = harness();
+    const h = harness({options: NEW_TAB});
     await h.saveCaptureTask(task(ID_A, 'lens'));
     await h.openCaptureTarget(task(ID_A, 'lens'), {id: 3, index: 4});
 
@@ -271,7 +278,7 @@ test('the lens page finds its image by the id of its tab', async () => {
 });
 
 test('the lens image is found even when it only exists in memory', async () => {
-    const h = harness({sessionFails: true});
+    const h = harness({options: NEW_TAB, sessionFails: true});
     await h.saveCaptureTask(task(ID_A, 'lens'));
     await h.openCaptureTarget(task(ID_A, 'lens'), {id: 3, index: 0});
     const own = respond();
@@ -280,7 +287,7 @@ test('the lens image is found even when it only exists in memory', async () => {
 });
 
 test('gemini and claude tabs open next to the opener and are not registered as lens tabs', async () => {
-    const h = harness();
+    const h = harness({options: NEW_TAB});
     await h.saveCaptureTask(task(ID_A, 'gemini'));
     await h.openCaptureTarget(task(ID_A, 'gemini'), {id: 8, index: 2});
     assert.equal(h.state.created[0].url, `https://gemini.google.com/app?ss_task=${ID_A}`);
@@ -288,6 +295,39 @@ test('gemini and claude tabs open next to the opener and are not registered as l
     const lens = respond();
     await h.getLensTask({tab: {id: 41}}, lens);
     assert.equal(lens.box.value.task, null);
+});
+
+test('the target opens in the current tab when new tabs are disabled', async () => {
+    const h = harness({options: {newtab: false}});
+    await h.saveCaptureTask(task(ID_A, 'gemini'));
+    await h.openCaptureTarget(task(ID_A, 'gemini'), {id: 8, index: 2});
+    assert.equal(h.state.created.length, 0);
+    assert.deepEqual({...h.state.updated[0]}, {id: 8, url: `https://gemini.google.com/app?ss_task=${ID_A}`});
+});
+
+test('a new target tab follows the background and tab position options', async () => {
+    const h = harness({options: {newtab: true, background_tab: true, open_new_tab_last: true}});
+    await h.openCaptureTarget(task(ID_A, 'claude'), {id: 8, index: 2});
+    assert.equal(h.state.updated.length, 0);
+    assert.equal(h.state.created[0].active, false);
+    assert.equal(h.state.created[0].openerTabId, 8);
+    assert.equal('index' in h.state.created[0], false);
+});
+
+test('a lens search in the current tab takes the newest task of the tab', async () => {
+    const h = harness({options: {newtab: false}});
+    await h.saveCaptureTask(task(ID_A, 'lens', 1000000));
+    await h.openCaptureTarget(task(ID_A, 'lens'), {id: 3, index: 0});
+    // The first search failed and the tab is used again
+    h.state.now += 1000;
+    await h.saveCaptureTask(task(ID_B, 'lens', h.state.now));
+    await h.openCaptureTarget(task(ID_B, 'lens'), {id: 3, index: 0});
+
+    assert.equal(h.state.created.length, 0);
+    assert.deepEqual(h.state.updated.map(details => details.id), [3, 3]);
+    const own = respond();
+    await h.getLensTask({tab: {id: 3}}, own);
+    assert.equal(own.box.value.task.id, ID_B);
 });
 
 
@@ -381,6 +421,7 @@ test('an image without an area needs the original image', async () => {
     await assert.rejects(failing.processCaptureSubmit(submitRequest({rect: null, imageUrl: 'https://frame.example/b.png'}), sender),
         err => err.captureMessage === 'capture_error_image');
     assert.equal(failing.state.created.length, 0);
+    assert.equal(failing.state.updated.length, 0);
 });
 
 test('a missing or tiny area without an image is rejected', async () => {
@@ -417,6 +458,7 @@ test('the copy button copies the image to the clipboard of the page and does not
     // Always png, the clipboard takes no other images
     assert.match(copy.args[0], /^data:image\/png;base64,/);
     assert.equal(h.state.created.length, 0);
+    assert.equal(h.state.updated.length, 0);
     assert.equal([...h.session.keys()].some(key => key.startsWith('capture_task_') && key !== 'capture_task_index'), false);
 });
 
@@ -435,5 +477,5 @@ test('a failing copy is reported and a search does not touch the clipboard', asy
     const search = harness();
     await search.processCaptureSubmit(submitRequest({}), sender);
     assert.equal(search.state.injected.length, 0);
-    assert.equal(search.state.created.length, 1);
+    assert.equal(search.state.updated.length, 1);
 });

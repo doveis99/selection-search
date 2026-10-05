@@ -69,9 +69,12 @@ function openAllUrls(request, sendResponse, parent_tab){
         }
 
         // If we open multiple urls, and the newtabs option is off, we open the first tab in the
-        // current tab
-        if(i == 0 && !opt.newtab){
-            chrome.tabs.update({url: urls[i].url});
+        // current tab. The engine can negate the newtabs option.
+        if(i == 0 && Boolean(opt.newtab) == Boolean(urls[i].negate_newtab)){
+            if(parent_tab != undefined && parent_tab.id >= 0)
+                chrome.tabs.update(parent_tab.id, {url: urls[i].url});
+            else
+                chrome.tabs.update({url: urls[i].url});
             continue;
         }
 

@@ -223,7 +223,8 @@ function BaseActionUtils(){
     }
 
     this.createUrlWithOptions = function(engine, url){
-        return {url: url, incognito: engine.open_in_incognito, newwindow: engine.open_in_window, popupwindow: engine.open_in_popup};
+        return {url: url, incognito: engine.open_in_incognito, newwindow: engine.open_in_window, popupwindow: engine.open_in_popup,
+            negate_newtab: Boolean(engine.negate_newtab_option)};
     }
 
 

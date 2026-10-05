@@ -143,7 +143,7 @@
     "opt_background_tab": { "message": "Open search in background tab" },
     "opt_background_tab_desc": { "message": "Only useful if “Open search in new tab” is enabled, or when opening multiple tabs at once, e.g. opening all searches in a submenu." },
     "opt_open_new_tab_last": { "message": "Open new tabs in last position" },
-    "opt_open_new_tab_last_desc": { "message": "Only affects searches from the context menu. The popup uses the browser's default behavior and is not affected by this option. By default the new tab opens next to the current tab." },
+    "opt_open_new_tab_last_desc": { "message": "Only affects searches from the context menu and image or area searches. The popup uses the browser's default behavior and is not affected by this option. By default the new tab opens next to the current tab." },
     "pwa_tip": { "message": "<p><strong>To open search results in an installed PWA app (e.g. YouTube)</strong></p><ul><li>Enable “Open search in new tab” and disable “Open search in background tab”.</li><li>“New window”, “Incognito mode” and “Negate new tab option” in the engine options must be off.</li><li>This only works for searches from the popup menu on web pages. The context menu and toolbar popup always open a browser tab.</li><li>“Open supported links” must be enabled in the app settings in Chrome (right click the app in chrome://apps).</li></ul>" },
     "general_menu_heading": { "message": "Menus" },
     "opt_allow_without_selection": { "message": "Allow engines without selection" },

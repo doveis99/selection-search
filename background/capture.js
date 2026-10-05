@@ -496,17 +496,27 @@ async function getLensTask(sender, sendResponse){
         }
 
         if(sender.tab){
+            // A tab opened in the current tab keeps its id, so a task that failed
+            // before can be registered to the same tab. The newest one wins.
+            var isNewer = function(candidate, created){
+                return !candidate || created > candidate.created;
+            };
+
             var index = await readCaptureIndex();
-            var id = Object.keys(index).find(function(key){
-                return index[key].target === 'lens' && index[key].tabId === sender.tab.id;
+            var newest = null;
+            Object.keys(index).forEach(function(key){
+                if(index[key].target === 'lens' && index[key].tabId === sender.tab.id && isNewer(newest, index[key].created))
+                    newest = {id: key, created: index[key].created};
             });
-            if(id){
-                task = await getCaptureTask(id);
-            }else{
-                // Tasks that only exist in memory are not in the index
-                task = Object.values(_captureMemoryTasks).find(function(memoryTask){
-                    return memoryTask.target === 'lens' && memoryTask.tabId === sender.tab.id;
-                }) || null;
+
+            // Tasks that only exist in memory are not in the index
+            Object.values(_captureMemoryTasks).forEach(function(memoryTask){
+                if(memoryTask.target === 'lens' && memoryTask.tabId === sender.tab.id && isNewer(newest, memoryTask.created))
+                    newest = {id: memoryTask.id, created: memoryTask.created};
+            });
+
+            if(newest){
+                task = await getCaptureTask(newest.id);
             }
         }
     }catch(err){
@@ -536,23 +546,36 @@ function buildTargetUrl(task, options){
     return url.toString();
 }
 
+// Opens the target like a search: in the current tab, unless the options open
+// searches in a new tab.
+function openCaptureTargetTab(url, openerTab, options){
+
+    var hasOpener = openerTab && openerTab.id >= 0;
+
+    if(hasOpener && !options.newtab)
+        return chrome.tabs.update(openerTab.id, {url: url});
+
+    var createProperties = {url: url, active: !options.background_tab};
+    if(hasOpener){
+        createProperties.openerTabId = openerTab.id;
+        if(!options.open_new_tab_last)
+            createProperties.index = openerTab.index + 1;
+    }
+    return chrome.tabs.create(createProperties);
+}
+
 async function openCaptureTarget(task, openerTab){
 
-    var url = buildTargetUrl(task, Storage.getOptions());
-
-    var createProperties = {url: url, active: true};
-    if(openerTab && openerTab.id != undefined){
-        createProperties.openerTabId = openerTab.id;
-        createProperties.index = openerTab.index + 1;
-    }
+    var options = Storage.getOptions();
+    var url = buildTargetUrl(task, options);
 
     if(task.target !== 'lens'){
-        await chrome.tabs.create(createProperties);
+        await openCaptureTargetTab(url, openerTab, options);
         return;
     }
 
     _captureLensPending = (async function(){
-        var tab = await chrome.tabs.create(createProperties);
+        var tab = await openCaptureTargetTab(url, openerTab, options);
 
         if(_captureMemoryTasks[task.id]){
             _captureMemoryTasks[task.id].tabId = tab.id;
