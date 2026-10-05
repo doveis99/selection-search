@@ -11,6 +11,9 @@
 // menu item) its url is sent as well and the original image is used instead of the
 // screenshot if it can be loaded.
 //
+// The copy button (or Ctrl+C) copies the same image to the clipboard instead of
+// searching it.
+//
 // This script does not use the globals of the other content scripts, they are not
 // available in tabs that were opened before the extension was updated.
 
@@ -29,6 +32,9 @@
     // Images read by the page itself, bigger ones are left to the background script
     const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
     const IMAGE_FETCH_TIMEOUT = 5000;
+    // The copy button, it copies the image to the clipboard instead of searching it
+    const COPY_TARGET = 'clipboard';
+    const TOAST_DURATION = 2000;
 
     // Used until the background script answers, or if it does not
     const FALLBACK_CONFIG = {
@@ -105,6 +111,8 @@
         }
         .btn:hover { background: #2563eb; }
         .btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .btn.copy { background: rgba(255, 255, 255, 0.14); font-weight: 500; }
+        .btn.copy:hover { background: rgba(255, 255, 255, 0.24); }
         .btn.cancel { margin-left: auto; background: rgba(255, 255, 255, 0.14); font-weight: 500; }
         .btn.cancel:hover { background: rgba(255, 255, 255, 0.24); }
     `;
@@ -335,6 +343,12 @@
                 ev.preventDefault();
                 submit(config.lastTarget);
             }
+            // Ctrl+C copies the image unless text of the question is selected
+            if((ev.ctrlKey || ev.metaKey) && !ev.altKey && !ev.shiftKey && ev.code === 'KeyC' &&
+                    ui.question.selectionStart === ui.question.selectionEnd){
+                ev.preventDefault();
+                submit(COPY_TARGET);
+            }
         });
         ui.bar.appendChild(ui.question);
 
@@ -344,6 +358,12 @@
             button.addEventListener('click', function(){ submit(target.id); });
             ui.bar.appendChild(button);
         });
+
+        const copyButton = el('button', 'btn copy', t('capture_copy', 'Copy'));
+        copyButton.type = 'button';
+        copyButton.title = t('capture_copy_title', 'Copy the image to the clipboard (Ctrl+C)');
+        copyButton.addEventListener('click', function(){ submit(COPY_TARGET); });
+        ui.bar.appendChild(copyButton);
 
         const cancelButton = el('button', 'btn cancel', t('capture_cancel', 'Cancel'));
         cancelButton.type = 'button';
@@ -696,8 +716,9 @@
         // A new overlay may be started while the image is read
         const own = host;
 
+        const copy = targetId === COPY_TARGET;
         const message = {
-            action: 'captureSubmit',
+            action: copy ? 'captureCopy' : 'captureSubmit',
             target: targetId,
             question: ui.question.value.trim(),
             rect: rect ? {x: rect.x, y: rect.y, width: rect.width, height: rect.height} : null,
@@ -720,15 +741,32 @@
             if(host !== own)
                 return; // cancelled meanwhile
             try{
-                chrome.runtime.sendMessage(message, function(){
+                chrome.runtime.sendMessage(message, function(response){
                     void chrome.runtime.lastError;
                     cleanup();
+                    // Errors are shown by the background script
+                    if(copy && response && response.ok)
+                        showToast(t('capture_copied', 'The image was copied to the clipboard.'));
                 });
             }catch(err){
                 // The extension was reloaded or removed
                 cleanup();
             }
         });
+    }
+
+    // A short message on the page after the overlay is gone
+    function showToast(text){
+        const toast = document.createElement('selection-search-capture-toast');
+        toast.style.cssText = 'all: initial !important; position: fixed !important; z-index: 2147483647 !important; ' +
+            'left: 50% !important; bottom: 32px !important; transform: translateX(-50%) !important; ' +
+            'padding: 8px 16px !important; border-radius: 999px !important; pointer-events: none !important; ' +
+            'background: rgba(24, 24, 27, 0.92) !important; color: #fff !important; ' +
+            'font: 13px/1.4 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif !important; ' +
+            'box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;';
+        toast.textContent = text;
+        document.documentElement.appendChild(toast);
+        setTimeout(function(){ toast.remove(); }, TOAST_DURATION);
     }
 
     function cancel(){

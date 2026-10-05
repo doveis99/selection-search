@@ -10,6 +10,11 @@ and
 
 ## Changelog
 
+*0.9.14*
+- The image is no longer copied to the clipboard on every capture. The capture bar has a "Copy"
+  button instead (or Ctrl+C), which copies the selected area or image to the clipboard without
+  searching it. The option of 0.9.13 is removed.
+
 *0.9.13*
 - The image of the area capture is copied to the clipboard as well, in full size, so it can be pasted
   anywhere. It can be turned off in the general options.

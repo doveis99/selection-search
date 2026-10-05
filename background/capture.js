@@ -17,7 +17,10 @@
 //   gemini - sites/ai_chat.js attaches the image to the prompt box and sends the
 //   claude   question if there is one
 // The image is kept in chrome.storage.session under a random task id until the
-// target page has taken it. It is also copied to the clipboard, if enabled.
+// target page has taken it.
+//
+// The copy button of the overlay sends a "captureCopy" message instead, the same
+// image is then copied to the clipboard and nothing is searched.
 
 const CAPTURE_TASK_PREFIX = 'capture_task_';
 const CAPTURE_INDEX_KEY = 'capture_task_index';
@@ -345,8 +348,7 @@ async function writeImageToClipboard(dataUrl){
     }
 }
 
-// Copies the image in full size, before it is made smaller for the storage. It
-// must be done before the target tab opens and takes the focus from the page.
+// Copies the image in full size into the clipboard of the page the overlay is in
 async function copyCapturedImage(blob, sender){
     try{
         var dataUrl = await blobToDataUrl(await convertToPng(blob));
@@ -582,12 +584,11 @@ function newCaptureTaskId(){
     return crypto.randomUUID();
 }
 
-async function processCaptureSubmit(request, sender){
+// Returns the image of the selection: the original image when an image is
+// selected and it can be loaded, otherwise the selected area of the screenshot.
+async function prepareCaptureImage(request, sender){
 
     var tab = sender.tab;
-
-    if(!tab || !CAPTURE_TARGETS.hasOwnProperty(request.target))
-        throw captureError('capture_error_failed');
 
     // An image in a frame has no area, only the image
     var source = isImageSourceUrl(request.imageData) ? request.imageData :
@@ -615,10 +616,17 @@ async function processCaptureSubmit(request, sender){
     if(!blob)
         throw captureError('capture_error_image');
 
-    if(Storage.getOptions().capture_copy_to_clipboard)
-        await copyCapturedImage(blob, sender);
+    return blob;
+}
 
-    var image = await encodeCapturedImage(blob);
+async function processCaptureSubmit(request, sender){
+
+    var tab = sender.tab;
+
+    if(!tab || !CAPTURE_TARGETS.hasOwnProperty(request.target))
+        throw captureError('capture_error_failed');
+
+    var image = await encodeCapturedImage(await prepareCaptureImage(request, sender));
 
     var question = typeof request.question === 'string' ? request.question.trim().slice(0, 4000) : '';
 
@@ -642,12 +650,31 @@ async function processCaptureSubmit(request, sender){
     await openCaptureTarget(task, tab);
 }
 
-function captureSubmit(request, sender, sendResponse){
-    processCaptureSubmit(request, sender).then(function(){
+async function processCaptureCopy(request, sender){
+
+    if(!sender.tab)
+        throw captureError('capture_error_failed');
+
+    var blob = await prepareCaptureImage(request, sender);
+
+    if(!await copyCapturedImage(blob, sender))
+        throw captureError('capture_error_copy');
+}
+
+function respondToCapture(process, request, sender, sendResponse){
+    process(request, sender).then(function(){
         sendResponse({ok: true});
     }, function(err){
         console.warn('SelectionSearch: the area capture failed.', err);
         showCaptureError(err && err.captureMessage ? err.captureMessage : 'capture_error_failed');
         sendResponse({ok: false});
     });
+}
+
+function captureSubmit(request, sender, sendResponse){
+    respondToCapture(processCaptureSubmit, request, sender, sendResponse);
+}
+
+function captureCopy(request, sender, sendResponse){
+    respondToCapture(processCaptureCopy, request, sender, sendResponse);
 }

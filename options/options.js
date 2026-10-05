@@ -379,7 +379,6 @@ function initOptionsPage(){
 		$("#opt-capture-context-menu").attr('checked', response.options.capture_context_menu);
 		$("#opt-capture-image-context-menu").attr('checked', response.options.capture_image_context_menu);
 		$("#opt-capture-toolbar-button").attr('checked', response.options.capture_toolbar_button);
-		$("#opt-capture-copy-to-clipboard").attr('checked', response.options.capture_copy_to_clipboard);
 		$("#opt-capture-question").val(response.options.capture_question);
 
 		$("#toolbarStyle").val(response.toolbar_style);
@@ -653,7 +652,6 @@ function initOptionsPage(){
 			capture_context_menu: $('#opt-capture-context-menu').is(':checked'),
 			capture_image_context_menu: $('#opt-capture-image-context-menu').is(':checked'),
 			capture_toolbar_button: $('#opt-capture-toolbar-button').is(':checked'),
-			capture_copy_to_clipboard: $('#opt-capture-copy-to-clipboard').is(':checked'),
 			capture_question: $('#opt-capture-question').val().trim(),
 		});
 

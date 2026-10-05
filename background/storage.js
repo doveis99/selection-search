@@ -64,7 +64,6 @@ function DataStore(kwStore){
         capture_context_menu: true,
         capture_image_context_menu: true, // "Search this image" when right clicking an image
         capture_toolbar_button: true,
-        capture_copy_to_clipboard: true, // The captured image is copied to the clipboard too
         capture_question: '', // Default question for the AI chats, empty only attaches the image
     };
 
