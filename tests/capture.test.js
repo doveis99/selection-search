@@ -92,7 +92,8 @@ function harness({options = {}, sessionFails = false} = {}) {
         getCropArea, sanitizeCaptureRect, isCapturableUrl, buildTargetUrl, blobToDataUrl, startCapture,
         saveCaptureTask, getCaptureTask, deleteCaptureTask, purgeCaptureTasks, getCaptureTaskForSender,
         finishCaptureTask, openCaptureTarget, getLensTask, CAPTURE_TASK_TTL,
-        isImageSourceUrl, loadSourceImage, startImageCapture, processCaptureSubmit, processCaptureCopy
+        isImageSourceUrl, loadSourceImage, startImageCapture, processCaptureSubmit, processCaptureCopy,
+        processCaptureOpenTarget
     })`, context);
     return {...api, state, session};
 }
@@ -478,4 +479,35 @@ test('a failing copy is reported and a search does not touch the clipboard', asy
     await search.processCaptureSubmit(submitRequest({}), sender);
     assert.equal(search.state.injected.length, 0);
     assert.equal(search.state.updated.length, 1);
+});
+
+
+test('a new active tab of gemini and claude is opened by the page with a link', async () => {
+    for (const target of ['gemini', 'claude']) {
+        const h = harness({options: NEW_TAB});
+        const result = await h.processCaptureSubmit(submitRequest({target}), sender);
+        const id = storedImage(h).task.id;
+        assert.equal(result.taskId, id);
+        assert.equal(new URL(result.link).searchParams.get('ss_task'), id);
+        assert.equal(h.state.created.length + h.state.updated.length, 0);
+    }
+});
+
+test('lens, the current tab and background tabs are opened by the extension', async () => {
+    for (const [options, target] of [[NEW_TAB, 'lens'], [{newtab: false}, 'gemini'], [{newtab: true, background_tab: true}, 'claude']]) {
+        const h = harness({options});
+        assert.equal(await h.processCaptureSubmit(submitRequest({target}), sender), undefined);
+        assert.equal(h.state.created.length + h.state.updated.length, 1);
+    }
+});
+
+test('the extension opens the link when the page could not', async () => {
+    const h = harness({options: NEW_TAB});
+    const {taskId} = await h.processCaptureSubmit(submitRequest({target: 'claude'}), sender);
+    await h.processCaptureOpenTarget({taskId}, sender);
+    assert.equal(h.state.created[0].url, `https://claude.ai/new?ss_task=${taskId}&incognito=true`);
+    assert.equal(h.state.created[0].active, true);
+
+    await assert.rejects(h.processCaptureOpenTarget({taskId: ID_B}, sender), err => err.captureMessage === 'capture_error_failed');
+    assert.equal(h.state.created.length, 1);
 });

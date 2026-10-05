@@ -10,6 +10,11 @@ and
 
 ## Changelog
 
+*0.9.16*
+- The image and area searches of Gemini and Claude are opened by the page with a link when they open
+  in a new active tab, like the searches of the popup, so they open in the installed app of the site
+  (PWA). If the link can't be opened in time, the extension opens the tab instead.
+
 *0.9.15*
 - The image and area searches (Google Lens, Gemini and Claude) follow the "Open search in new tab",
   "Open search in background tab" and "Open new tabs in last position" options like the other

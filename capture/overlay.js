@@ -747,12 +747,39 @@
                     // Errors are shown by the background script
                     if(copy && response && response.ok)
                         showToast(t('capture_copied', 'The image was copied to the clipboard.'));
+                    if(response && response.ok && response.link)
+                        openLink(response.link, response.taskId);
                 });
             }catch(err){
                 // The extension was reloaded or removed
                 cleanup();
             }
         });
+    }
+
+    // Opens the target in a new tab with a link, like the searches of the popup,
+    // so it opens in the installed app of the site (PWA) when there is one. A
+    // link needs the user activation of the click on the target, which expires
+    // after a few seconds. The background script opens the tab then instead.
+    function openLink(url, taskId){
+        const activation = navigator.userActivation;
+        if(activation && !activation.isActive){
+            try{
+                chrome.runtime.sendMessage({action: 'captureOpenTarget', taskId: taskId}, function(){
+                    void chrome.runtime.lastError;
+                });
+            }catch(err){
+                // The extension was reloaded or removed
+            }
+            return;
+        }
+
+        // Not added to the page, so the click doesn't reach the scripts of the page
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.click();
     }
 
     // A short message on the page after the overlay is gone

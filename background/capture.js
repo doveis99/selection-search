@@ -546,6 +546,14 @@ function buildTargetUrl(task, options){
     return url.toString();
 }
 
+// The page opens the target with a link when it would open in a new active tab,
+// like the searches of the popup. Only a link of the page opens in the installed
+// app of the site (PWA), a tab created by the extension never does. Lens has no
+// app and must know its tab, so it is always opened by the extension.
+function opensCaptureTargetAsLink(task, options){
+    return task.target !== 'lens' && Boolean(options.newtab) && !options.background_tab;
+}
+
 // Opens the target like a search: in the current tab, unless the options open
 // searches in a new tab.
 function openCaptureTargetTab(url, openerTab, options){
@@ -670,7 +678,21 @@ async function processCaptureSubmit(request, sender){
         chrome.storage.local.set({[CAPTURE_LAST_TARGET_KEY]: request.target});
     }
 
+    var options = Storage.getOptions();
+    if(opensCaptureTargetAsLink(task, options))
+        return {link: buildTargetUrl(task, options), taskId: task.id};
+
     await openCaptureTarget(task, tab);
+}
+
+// The page could not open the link, the user activation of the click expired
+async function processCaptureOpenTarget(request, sender){
+
+    var task = await getCaptureTask(request.taskId);
+    if(!task || !sender.tab)
+        throw captureError('capture_error_failed');
+
+    await openCaptureTarget(task, sender.tab);
 }
 
 async function processCaptureCopy(request, sender){
@@ -685,8 +707,8 @@ async function processCaptureCopy(request, sender){
 }
 
 function respondToCapture(process, request, sender, sendResponse){
-    process(request, sender).then(function(){
-        sendResponse({ok: true});
+    process(request, sender).then(function(result){
+        sendResponse(Object.assign({ok: true}, result));
     }, function(err){
         console.warn('SelectionSearch: the area capture failed.', err);
         showCaptureError(err && err.captureMessage ? err.captureMessage : 'capture_error_failed');
@@ -700,4 +722,8 @@ function captureSubmit(request, sender, sendResponse){
 
 function captureCopy(request, sender, sendResponse){
     respondToCapture(processCaptureCopy, request, sender, sendResponse);
+}
+
+function captureOpenTarget(request, sender, sendResponse){
+    respondToCapture(processCaptureOpenTarget, request, sender, sendResponse);
 }

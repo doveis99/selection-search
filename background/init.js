@@ -91,6 +91,8 @@ function Background(_previousVersion) {
                 return captureSubmit(request, sender, sendResponse);
             case "captureCopy":
                 return captureCopy(request, sender, sendResponse);
+            case "captureOpenTarget":
+                return captureOpenTarget(request, sender, sendResponse);
             case "getCaptureTask":
                 return getCaptureTaskForSender(request, sender, sendResponse);
             case "finishCaptureTask":
@@ -162,7 +164,7 @@ function Background(_previousVersion) {
 
 function initBackground(){
 
-    let CURRENT_VERSION = '0.9.15';
+    let CURRENT_VERSION = '0.9.16';
 
     return storageLocalSyncInit(Storage).then(values => {
 
